@@ -1,15 +1,18 @@
 import type { HexPosition } from '../units/Company'
+import { HEX_SIZE_LNG as CFG_HEX_SIZE, LAT_CENTER, ZONE } from '../config/mapConfig'
 
-// Константи гексової сітки — мають збігатись з hexGrid.ts
-export const HEX_SIZE_LNG = 0.015
-export const LAT_SCALE = Math.cos(49.55 * Math.PI / 180)
+// Похідні константи гексової сітки (джерело — mapConfig.ts)
+export const HEX_SIZE_LNG = CFG_HEX_SIZE
+export const LAT_SCALE    = Math.cos(LAT_CENTER * Math.PI / 180)
 export const HEX_SIZE_LAT = HEX_SIZE_LNG * LAT_SCALE
-export const SQRT3 = Math.sqrt(3)
-export const COL_SPACING = HEX_SIZE_LNG * 1.5
-export const ROW_SPACING = HEX_SIZE_LAT * SQRT3
-export const COL_OFFSET  = HEX_SIZE_LAT * SQRT3 / 2
-export const ZONE_LNG_MIN = 36.3
-export const ZONE_LAT_MIN = 49.0
+export const SQRT3        = Math.sqrt(3)
+export const COL_SPACING  = HEX_SIZE_LNG * 1.5
+export const ROW_SPACING  = HEX_SIZE_LAT * SQRT3
+export const COL_OFFSET   = HEX_SIZE_LAT * SQRT3 / 2
+export const ZONE_LNG_MIN = ZONE.lngMin
+export const ZONE_LNG_MAX = ZONE.lngMax
+export const ZONE_LAT_MIN = ZONE.latMin
+export const ZONE_LAT_MAX = ZONE.latMax
 
 // Шість напрямків у аксіальних координатах для flat-top гексів
 const AXIAL_DIRS: [number, number][] = [

@@ -1,9 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson'
-
-const HEX_SIZE_LNG = 0.015
-const LAT_SCALE = Math.cos(49.55 * Math.PI / 180)
-const HEX_SIZE_LAT = HEX_SIZE_LNG * LAT_SCALE
-const SQRT3 = Math.sqrt(3)
+import { HEX_SIZE_LNG, LAT_SCALE, HEX_SIZE_LAT, SQRT3 } from './utils/hexUtils'
+import { ZONE } from './config/mapConfig'
 
 export interface HexProperties {
   col: number
@@ -28,10 +25,10 @@ const COL_SPACING = HEX_SIZE_LNG * 1.5
 const ROW_SPACING = HEX_SIZE_LAT * SQRT3
 const COL_OFFSET  = HEX_SIZE_LAT * SQRT3 / 2
 
-const ZONE_LNG_MIN = 36.3
-const ZONE_LNG_MAX = 38.3
-const ZONE_LAT_MIN = 49.0
-const ZONE_LAT_MAX = 50.1
+const ZONE_LNG_MIN = ZONE.lngMin
+const ZONE_LNG_MAX = ZONE.lngMax
+const ZONE_LAT_MIN = ZONE.latMin
+const ZONE_LAT_MAX = ZONE.latMax
 
 const numCols = Math.ceil((ZONE_LNG_MAX - ZONE_LNG_MIN) / COL_SPACING) + 2
 const numRows = Math.ceil((ZONE_LAT_MAX - ZONE_LAT_MIN) / ROW_SPACING) + 2

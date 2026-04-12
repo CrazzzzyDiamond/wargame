@@ -4,6 +4,9 @@ import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
+import { BrigadeType } from '../units/types'
+import { playSound } from '../utils/sound'
+import airSelect from '../sound/air-select.mp3'
 
 interface AnimatedPos {
   lng: number
@@ -14,8 +17,9 @@ interface AnimatedPos {
 const LERP = 0.08
 
 export function UnitLayer() {
-  const companies    = useGameStore(s => s.companies)
-  const selectedId   = useGameStore(s => s.selectedCompanyId)
+  const companies     = useGameStore(s => s.companies)
+  const brigades      = useGameStore(s => s.brigades)
+  const selectedId    = useGameStore(s => s.selectedCompanyId)
   const selectCompany = useGameStore(s => s.selectCompany)
 
   // Поточні анімовані позиції — не в стейті, бо оновлюємо кожен кадр через ref
@@ -82,7 +86,12 @@ export function UnitLayer() {
               anchor="center"
               onClick={(e) => {
                 e.originalEvent.stopPropagation()
-                selectCompany(selectedId === company.id ? null : company.id)
+                const isAlreadySelected = selectedId === company.id
+                if (!isAlreadySelected) {
+                  const brigade = brigades.get(company.brigadeId)
+                  if (brigade?.type === BrigadeType.DSV) playSound(airSelect)
+                }
+                selectCompany(isAlreadySelected ? null : company.id)
               }}
             >
               <div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>

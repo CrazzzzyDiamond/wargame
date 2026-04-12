@@ -1,8 +1,8 @@
 import { useGameStore } from '../store/gameStore'
 import type { GameSpeed } from '../store/gameStore'
+import { OPERATION_START } from '../config/mapConfig'
 
-// Початок операції — 6 вересня 2022, 06:00 ранку
-const OPERATION_START_EPOCH = new Date('2022-09-06T06:00:00').getTime()
+const OPERATION_START_EPOCH = new Date(OPERATION_START).getTime()
 
 function formatGameTime(elapsedSeconds: number): string {
   const totalMs   = OPERATION_START_EPOCH + elapsedSeconds * 1000

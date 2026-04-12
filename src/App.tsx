@@ -1,20 +1,25 @@
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import Map, { Source, Layer } from 'react-map-gl/mapbox'
-import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox'
+import type { MapMouseEvent } from 'react-map-gl/mapbox'
 import type { FeatureCollection } from 'geojson'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { hexGridGeoJSON } from './hexGrid'
 import { UnitLayer } from './components/UnitLayer'
 import { HQLayer } from './components/HQLayer'
 import { FogLayer } from './components/FogLayer'
+import { TerrainLayer } from './components/TerrainLayer'
 import { MovementLayer } from './components/MovementLayer'
 import { TimeControls } from './components/TimeControls'
 import { DirectiveMenu } from './components/DirectiveMenu'
 import { UnitPanel } from './components/UnitPanel'
 import { useGameStore } from './store/gameStore'
 import { seedScenario } from './units/seed'
+import { INITIAL_VIEW, MAP_BOUNDS, ZONE } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain } from './utils/terrainAnalysis'
+import { playSound } from './utils/sound'
+import { BrigadeType } from './units/types'
+import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
 
 // Інтервал тіку в мілісекундах реального часу
@@ -23,20 +28,12 @@ const TICK_DELTA_SEC    = TICK_INTERVAL_MS / 1000
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
-const INITIAL_VIEW = {
-  longitude: 37.6,
-  latitude: 49.6,
-  zoom: 9,
-  pitch: 0,
-  bearing: 0,
-}
-
-const OPERATION_ZONE = [
-  [36.3, 50.1],
-  [38.3, 50.1],
-  [38.3, 49.0],
-  [36.3, 49.0],
-  [36.3, 50.1],
+const ZONE_RING: [number, number][] = [
+  [ZONE.lngMin, ZONE.latMax],
+  [ZONE.lngMax, ZONE.latMax],
+  [ZONE.lngMax, ZONE.latMin],
+  [ZONE.lngMin, ZONE.latMin],
+  [ZONE.lngMin, ZONE.latMax],
 ]
 
 const maskGeoJSON: FeatureCollection = {
@@ -48,7 +45,7 @@ const maskGeoJSON: FeatureCollection = {
       type: 'Polygon',
       coordinates: [
         [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
-        [...OPERATION_ZONE].reverse() as [number, number][],
+        [...ZONE_RING].reverse(),
       ],
     },
   }],
@@ -57,7 +54,6 @@ const maskGeoJSON: FeatureCollection = {
 export default function App() {
   const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick, setTerrainMap } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
-  const mapRef = useRef<MapRef>(null)
 
   useEffect(() => {
     seedScenario({ addBrigade, addBattalion, addCompany })
@@ -87,20 +83,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Аналіз ландшафту після повного завантаження тайлів
-  const handleMapIdle = useCallback(() => {
-    const map = mapRef.current?.getMap()
-    if (!map) return
-
+  // Аналіз ландшафту через Overpass API при старті
+  useEffect(() => {
     const cached = loadTerrainCache()
-    if (cached) {
-      setTerrainMap(cached)
-      return
-    }
-
-    const terrain = analyzeAndCacheTerrain(map)
-    setTerrainMap(terrain)
-  }, [setTerrainMap])
+    if (cached) { setTerrainMap(cached); return }
+    analyzeAndCacheTerrain().then(setTerrainMap)
+  }, [])
 
   // Лівий клік — скасувати вибір
   const handleMapClick = useCallback(() => {
@@ -111,6 +99,9 @@ export default function App() {
   const handleMapRightClick = useCallback((e: MapMouseEvent) => {
     if (!selectedCompanyId) return
     e.preventDefault()
+    const { companies, brigades } = useGameStore.getState()
+    const brigade = brigades.get(companies.get(selectedCompanyId)?.brigadeId ?? '')
+    if (brigade?.type === BrigadeType.DSV) playSound(airMove)
     const hex = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
     moveCompany(selectedCompanyId, hex)
   }, [selectedCompanyId, moveCompany])
@@ -145,21 +136,18 @@ export default function App() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
     <Map
-      ref={mapRef}
+
       initialViewState={INITIAL_VIEW}
       style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
       minZoom={7}
       maxZoom={13}
-      maxBounds={[
-        [36.0, 48.8],
-        [38.8, 50.4],
-      ]}
+      maxBounds={MAP_BOUNDS}
       onClick={handleMapClick}
       onContextMenu={handleMapRightClick}
       onMouseMove={handleMouseMove}
-      onIdle={handleMapIdle}
+
     >
       <Source type="geojson" data={maskGeoJSON}>
         <Layer
@@ -194,6 +182,7 @@ export default function App() {
         />
       </Source>
 
+      <TerrainLayer />
       <FogLayer />
       <MovementLayer />
       <HQLayer />
