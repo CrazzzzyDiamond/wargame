@@ -5,6 +5,9 @@ import type { FeatureCollection } from 'geojson'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { hexGridGeoJSON } from './hexGrid'
 import { UnitLayer } from './components/UnitLayer'
+import { HQLayer } from './components/HQLayer'
+import { FogLayer } from './components/FogLayer'
+import { DirectiveMenu } from './components/DirectiveMenu'
 import { UnitPanel } from './components/UnitPanel'
 import { useGameStore } from './store/gameStore'
 import { seedScenario } from './units/seed'
@@ -99,9 +102,12 @@ export default function App() {
         />
       </Source>
 
+      <FogLayer />
+      <HQLayer />
       <UnitLayer />
     </Map>
     <UnitPanel />
+    <DirectiveMenu />
     </div>
   )
 }

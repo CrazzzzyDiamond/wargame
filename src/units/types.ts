@@ -49,3 +49,16 @@ export enum Readiness {
   Strained  = 'strained',    // знижена ефективність
   Exhausted = 'exhausted',   // критичний стан, потребує відводу
 }
+
+export enum Directive {
+  Advance  = 'advance',   // наступ — +атака, readiness витрачається швидше
+  Hold     = 'hold',      // утримувати — +оборона, заборона руху
+  Rest     = 'rest',      // відпочинок — відновлення readiness і morale
+}
+
+export enum Morale {
+  High    = 'high',    // бойовий — бонус до атаки
+  Steady  = 'steady',  // стійкий — без змін
+  Shaken  = 'shaken',  // похитнувся — штраф до атаки і оборони
+  Panic   = 'panic',   // паніка — відступає без наказу
+}

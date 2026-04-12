@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { CompanyType, Readiness } from '../units/types'
+import { CompanyType, Readiness, Morale } from '../units/types'
 
 const COMPANY_TYPE_LABELS: Record<CompanyType, string> = {
   [CompanyType.Assault]:   'Штурмова',
@@ -22,6 +22,20 @@ const READINESS_COLOR: Record<Readiness, string> = {
   [Readiness.Ready]:     '#4caf50',
   [Readiness.Strained]:  '#ff9800',
   [Readiness.Exhausted]: '#f44336',
+}
+
+const MORALE_LABEL: Record<Morale, string> = {
+  [Morale.High]:   'Бойовий',
+  [Morale.Steady]: 'Стійкий',
+  [Morale.Shaken]: 'Похитнувся',
+  [Morale.Panic]:  'Паніка',
+}
+
+const MORALE_COLOR: Record<Morale, string> = {
+  [Morale.High]:   '#4caf50',
+  [Morale.Steady]: '#e8eaf0',
+  [Morale.Shaken]: '#ff9800',
+  [Morale.Panic]:  '#f44336',
 }
 
 export function UnitPanel() {
@@ -94,6 +108,11 @@ export function UnitPanel() {
           <Row label="Боєздатність">
             <span style={{ color: READINESS_COLOR[company.readiness] }}>
               ● {READINESS_LABEL[company.readiness]}
+            </span>
+          </Row>
+          <Row label="Бойовий дух">
+            <span style={{ color: MORALE_COLOR[company.morale] }}>
+              ● {MORALE_LABEL[company.morale]}
             </span>
           </Row>
           <Row label="Видимість">

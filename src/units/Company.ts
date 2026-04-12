@@ -1,4 +1,4 @@
-import { CompanyType, Readiness } from './types'
+import { CompanyType, Readiness, Morale } from './types'
 
 // Позиція роти на гексовій сітці
 export interface HexPosition {
@@ -15,6 +15,7 @@ export class Company {
 
   position: HexPosition | null  // null = не розгорнута на карті
   readiness: Readiness
+  morale: Morale
 
   constructor(params: {
     id: string
@@ -31,6 +32,7 @@ export class Company {
     this.brigadeId = params.brigadeId
     this.position = params.position ?? null
     this.readiness = Readiness.Ready
+    this.morale = Morale.Steady
   }
 
   // Чи знаходиться рота на карті

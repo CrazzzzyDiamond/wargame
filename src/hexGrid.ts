@@ -1,6 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson'
 
-const HEX_SIZE_LNG = 0.04
+const HEX_SIZE_LNG = 0.02
 const LAT_SCALE = Math.cos(49.55 * Math.PI / 180)
 const HEX_SIZE_LAT = HEX_SIZE_LNG * LAT_SCALE
 const SQRT3 = Math.sqrt(3)

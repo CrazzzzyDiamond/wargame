@@ -29,6 +29,7 @@ export function seedScenario(store: Store) {
     shortName: '80 ОДШБр',
     type: BrigadeType.DSV,
     bonus: { type: BonusType.AssaultSpeed, description: 'Прорив без штрафу до швидкості при штурмі', value: 1.5 },
+    hqPosition: { col: 7, row: 11 },  // КП позаду рот
   }), [{
     battalion: new Battalion({ id: '80-1bat', name: '1-й штурмовий батальйон', type: BattalionType.Assault, brigadeId: '80-odshbr' }),
     companies: [
@@ -46,6 +47,7 @@ export function seedScenario(store: Store) {
     shortName: '95 ОДШБр',
     type: BrigadeType.DSV,
     bonus: { type: BonusType.AssaultSpeed, description: 'Прискорене переміщення по пересіченій місцевості', value: 1.3 },
+    hqPosition: { col: 10, row: 13 },
   }), [{
     battalion: new Battalion({ id: '95-1bat', name: '1-й штурмовий батальйон', type: BattalionType.Assault, brigadeId: '95-odshbr' }),
     companies: [
@@ -62,6 +64,7 @@ export function seedScenario(store: Store) {
     shortName: '25 ОПДБр',
     type: BrigadeType.DSV,
     bonus: { type: BonusType.AssaultSpeed, description: 'Підвищена мобільність при охопленні флангів', value: 1.3 },
+    hqPosition: { col: 16, row: 15 },
   }), [{
     battalion: new Battalion({ id: '25-1bat', name: '1-й десантний батальйон', type: BattalionType.Airborne, brigadeId: '25-opdbr' }),
     companies: [

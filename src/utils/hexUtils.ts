@@ -1,7 +1,7 @@
 import type { HexPosition } from '../units/Company'
 
 // Константи гексової сітки — мають збігатись з hexGrid.ts
-export const HEX_SIZE_LNG = 0.04
+export const HEX_SIZE_LNG = 0.02
 export const LAT_SCALE = Math.cos(49.55 * Math.PI / 180)
 export const HEX_SIZE_LAT = HEX_SIZE_LNG * LAT_SCALE
 export const SQRT3 = Math.sqrt(3)
@@ -10,6 +10,54 @@ export const ROW_SPACING = HEX_SIZE_LAT * SQRT3
 export const COL_OFFSET  = HEX_SIZE_LAT * SQRT3 / 2
 export const ZONE_LNG_MIN = 36.3
 export const ZONE_LAT_MIN = 49.0
+
+// Шість напрямків у аксіальних координатах для flat-top гексів
+const AXIAL_DIRS: [number, number][] = [
+  [+1,  0], [+1, -1], [0, -1],
+  [-1,  0], [-1, +1], [0, +1],
+]
+
+// Offset → аксіальні координати (odd-q схема)
+function toAxial(col: number, row: number): [number, number] {
+  return [col, row - Math.floor(col / 2)]
+}
+
+// Аксіальні → offset координати
+function fromAxial(q: number, r: number): [number, number] {
+  return [q, r + Math.floor(q / 2)]
+}
+
+// Всі гекси у радіусі від центру (включно з центром)
+export function getHexesInRadius(center: HexPosition, radius: number): HexPosition[] {
+  const [cq, cr] = toAxial(center.col, center.row)
+  const result: HexPosition[] = []
+
+  for (let dq = -radius; dq <= radius; dq++) {
+    const rMin = Math.max(-radius, -dq - radius)
+    const rMax = Math.min(+radius, -dq + radius)
+    for (let dr = rMin; dr <= rMax; dr++) {
+      const [col, row] = fromAxial(cq + dq, cr + dr)
+      result.push({ col, row })
+    }
+  }
+
+  return result
+}
+
+// Вершини гексу у географічних координатах (замкнений полігон)
+export function hexLngLatVertices(col: number, row: number): [number, number][] {
+  const [centerLng, centerLat] = hexToLngLat(col, row)
+  const verts: [number, number][] = []
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i
+    verts.push([
+      centerLng + HEX_SIZE_LNG * Math.cos(angle),
+      centerLat + HEX_SIZE_LAT * Math.sin(angle),
+    ])
+  }
+  verts.push(verts[0])
+  return verts
+}
 
 // Гекс → географічні координати центру
 export function hexToLngLat(col: number, row: number): [number, number] {

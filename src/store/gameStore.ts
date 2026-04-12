@@ -3,6 +3,7 @@ import type { Company } from '../units/Company'
 import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
+import { Directive } from '../units/types'
 
 export type GameSpeed = 'paused' | 'normal' | 'fast'
 
@@ -14,6 +15,10 @@ export interface GameState {
 
   // Вибраний юніт
   selectedCompanyId: string | null
+
+  // Вибраний штаб і директиви бригад
+  selectedHQId: string | null
+  brigadeDirectives: Map<string, Directive>
 
   // Стан часу
   speed: GameSpeed
@@ -29,6 +34,8 @@ export interface GameState {
 
   // Дії — вибір
   selectCompany: (companyId: string | null) => void
+  selectHQ: (brigadeId: string | null) => void
+  setDirective: (brigadeId: string, directive: Directive) => void
 
   // Дії — час
   setSpeed: (speed: GameSpeed) => void
@@ -41,6 +48,8 @@ export const useGameStore = create<GameState>((set) => ({
   companies: new Map(),
 
   selectedCompanyId: null,
+  selectedHQId: null,
+  brigadeDirectives: new Map(),
   speed: 'paused',
   elapsedSeconds: 0,
 
@@ -71,6 +80,14 @@ export const useGameStore = create<GameState>((set) => ({
   }),
 
   selectCompany: (companyId) => set({ selectedCompanyId: companyId }),
+
+  selectHQ: (brigadeId) => set({ selectedHQId: brigadeId }),
+
+  setDirective: (brigadeId, directive) => set((state) => {
+    const brigadeDirectives = new Map(state.brigadeDirectives)
+    brigadeDirectives.set(brigadeId, directive)
+    return { brigadeDirectives }
+  }),
 
   setSpeed: (speed) => set({ speed }),
 
