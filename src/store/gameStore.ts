@@ -4,6 +4,17 @@ import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
 import { Directive } from '../units/types'
+import { stepToward } from '../utils/hexUtils'
+
+// Ігрових хвилин на 1 реальну секунду для кожної швидкості
+const SPEED_MULTIPLIERS: Record<GameSpeed, number> = {
+  paused: 0,
+  normal: 5,   // 5 хв / сек → 1 гекс за ~4 реальні секунди
+  fast:   20,  // 20 хв / сек → 1 гекс за ~1 реальну секунду
+}
+
+// Скільки ігрових хвилин займає прохід 1 гексу (піхота ~4 км/год, гекс ~1.3 км)
+const MINUTES_PER_HEX = 20
 
 export type GameSpeed = 'paused' | 'normal' | 'fast'
 
@@ -71,11 +82,13 @@ export const useGameStore = create<GameState>((set) => ({
     return { companies }
   }),
 
-  moveCompany: (companyId, position) => set((state) => {
+  moveCompany: (companyId, targetHex) => set((state) => {
     const companies = new Map(state.companies)
     const company = companies.get(companyId)
     if (!company) return {}
-    company.position = position
+    // Встановлюємо ціль — рух відбуватиметься через tick
+    company.targetHex = targetHex
+    company.movementProgress = 0
     return { companies }
   }),
 
@@ -93,6 +106,34 @@ export const useGameStore = create<GameState>((set) => ({
 
   tick: (deltaSeconds) => set((state) => {
     if (state.speed === 'paused') return {}
-    return { elapsedSeconds: state.elapsedSeconds + deltaSeconds }
+
+    const gameMinutes = deltaSeconds * SPEED_MULTIPLIERS[state.speed]
+    const hexProgress = gameMinutes / MINUTES_PER_HEX
+
+    const companies = new Map(state.companies)
+
+    for (const company of companies.values()) {
+      if (!company.targetHex || !company.position) continue
+
+      company.movementProgress += hexProgress
+
+      // Один крок за раз — при накопиченні повного прогресу
+      while (company.movementProgress >= 1.0 && company.targetHex) {
+        company.movementProgress -= 1.0
+        const next = stepToward(company.position, company.targetHex)
+        company.position = next
+
+        if (next.col === company.targetHex.col && next.row === company.targetHex.row) {
+          company.targetHex = null
+          company.movementProgress = 0
+          break
+        }
+      }
+    }
+
+    return {
+      companies,
+      elapsedSeconds: state.elapsedSeconds + deltaSeconds,
+    }
   }),
 }))

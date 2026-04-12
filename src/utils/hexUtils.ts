@@ -44,6 +44,34 @@ export function getHexesInRadius(center: HexPosition, radius: number): HexPositi
   return result
 }
 
+// Один крок з from у напрямку to — повертає сусідній гекс найближчий до цілі
+export function stepToward(from: HexPosition, to: HexPosition): HexPosition {
+  if (from.col === to.col && from.row === to.row) return from
+
+  const [fq, fr] = toAxial(from.col, from.row)
+  const [tq, tr] = toAxial(to.col, to.row)
+
+  let bestDist = Infinity
+  let best: HexPosition = from
+
+  for (const [dq, dr] of AXIAL_DIRS) {
+    const nq = fq + dq
+    const nr = fr + dr
+    const dist = Math.max(
+      Math.abs(nq - tq),
+      Math.abs(nr - tr),
+      Math.abs((-nq - nr) - (-tq - tr)),
+    )
+    if (dist < bestDist) {
+      bestDist = dist
+      const [col, row] = fromAxial(nq, nr)
+      best = { col, row }
+    }
+  }
+
+  return best
+}
+
 // Вершини гексу у географічних координатах (замкнений полігон)
 export function hexLngLatVertices(col: number, row: number): [number, number][] {
   const [centerLng, centerLat] = hexToLngLat(col, row)

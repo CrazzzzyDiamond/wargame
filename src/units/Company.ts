@@ -14,6 +14,8 @@ export class Company {
   readonly brigadeId: string
 
   position: HexPosition | null  // null = не розгорнута на карті
+  targetHex: HexPosition | null // кінцева точка наказаного маршруту
+  movementProgress: number      // прогрес руху до наступного гексу (0–1)
   readiness: Readiness
   morale: Morale
 
@@ -31,6 +33,8 @@ export class Company {
     this.battalionId = params.battalionId
     this.brigadeId = params.brigadeId
     this.position = params.position ?? null
+    this.targetHex = null
+    this.movementProgress = 0
     this.readiness = Readiness.Ready
     this.morale = Morale.Steady
   }
