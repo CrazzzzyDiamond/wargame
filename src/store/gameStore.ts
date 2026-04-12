@@ -3,7 +3,7 @@ import type { Company } from '../units/Company'
 import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
-import { Directive } from '../units/types'
+import { Directive, TerrainType } from '../units/types'
 import { stepToward } from '../utils/hexUtils'
 
 // Ігрових хвилин на 1 реальну секунду для кожної швидкості
@@ -30,6 +30,10 @@ export interface GameState {
   // Вибраний штаб і директиви бригад
   selectedHQId: string | null
   brigadeDirectives: Map<string, Directive>
+
+  // Ландшафт гексів
+  terrainMap: Map<string, TerrainType>
+  setTerrainMap: (terrain: Map<string, TerrainType>) => void
 
   // Стан часу
   speed: GameSpeed
@@ -61,6 +65,7 @@ export const useGameStore = create<GameState>((set) => ({
   selectedCompanyId: null,
   selectedHQId: null,
   brigadeDirectives: new Map(),
+  terrainMap: new Map(),
   speed: 'paused',
   elapsedSeconds: 0,
 
@@ -91,6 +96,8 @@ export const useGameStore = create<GameState>((set) => ({
     company.movementProgress = 0
     return { companies }
   }),
+
+  setTerrainMap: (terrain) => set({ terrainMap: terrain }),
 
   selectCompany: (companyId) => set({ selectedCompanyId: companyId }),
 

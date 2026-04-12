@@ -1,6 +1,6 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import Map, { Source, Layer } from 'react-map-gl/mapbox'
-import type { MapMouseEvent } from 'react-map-gl/mapbox'
+import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox'
 import type { FeatureCollection } from 'geojson'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { hexGridGeoJSON } from './hexGrid'
@@ -14,6 +14,7 @@ import { UnitPanel } from './components/UnitPanel'
 import { useGameStore } from './store/gameStore'
 import { seedScenario } from './units/seed'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
+import { loadTerrainCache, analyzeAndCacheTerrain } from './utils/terrainAnalysis'
 import type { HexPosition } from './units/Company'
 
 // Інтервал тіку в мілісекундах реального часу
@@ -54,8 +55,9 @@ const maskGeoJSON: FeatureCollection = {
 }
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick, setTerrainMap } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
+  const mapRef = useRef<MapRef>(null)
 
   useEffect(() => {
     seedScenario({ addBrigade, addBattalion, addCompany })
@@ -66,6 +68,39 @@ export default function App() {
     const id = setInterval(() => tick(TICK_DELTA_SEC), TICK_INTERVAL_MS)
     return () => clearInterval(id)
   }, [tick])
+
+  // Клавіатурні скорочення: пробіл — пауза/старт, 1/2 — швидкість
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const { speed, setSpeed } = useGameStore.getState()
+      if (e.code === 'Space') {
+        e.preventDefault()
+        setSpeed(speed === 'paused' ? 'normal' : 'paused')
+      } else if (e.code === 'Digit1') {
+        setSpeed('normal')
+      } else if (e.code === 'Digit2') {
+        setSpeed('fast')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Аналіз ландшафту після повного завантаження тайлів
+  const handleMapIdle = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    const cached = loadTerrainCache()
+    if (cached) {
+      setTerrainMap(cached)
+      return
+    }
+
+    const terrain = analyzeAndCacheTerrain(map)
+    setTerrainMap(terrain)
+  }, [setTerrainMap])
 
   // Лівий клік — скасувати вибір
   const handleMapClick = useCallback(() => {
@@ -110,6 +145,7 @@ export default function App() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
     <Map
+      ref={mapRef}
       initialViewState={INITIAL_VIEW}
       style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
@@ -123,6 +159,7 @@ export default function App() {
       onClick={handleMapClick}
       onContextMenu={handleMapRightClick}
       onMouseMove={handleMouseMove}
+      onIdle={handleMapIdle}
     >
       <Source type="geojson" data={maskGeoJSON}>
         <Layer

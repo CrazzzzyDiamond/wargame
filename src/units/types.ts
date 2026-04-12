@@ -62,3 +62,17 @@ export enum Morale {
   Shaken  = 'shaken',  // похитнувся — штраф до атаки і оборони
   Panic   = 'panic',   // паніка — відступає без наказу
 }
+
+export enum TerrainType {
+  Open   = 'open',    // відкрите поле — базова швидкість
+  Forest = 'forest',  // ліс — повільніше, оборонний бонус, менша видимість
+  Urban  = 'urban',   // місто — повільніше, великий оборонний бонус
+  Water  = 'water',   // вода — непрохідна
+}
+
+export enum UnitStatus {
+  Marching = 'marching', // на марші — є targetHex
+  Holding  = 'holding',  // утримання позицій — директива Hold, нерухомий
+  Idle     = 'idle',     // очікування — стоїть без конкретного наказу
+  Combat   = 'combat',   // бій — контакт з противником (майбутня механіка)
+}

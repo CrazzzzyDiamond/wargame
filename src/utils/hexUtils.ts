@@ -1,7 +1,7 @@
 import type { HexPosition } from '../units/Company'
 
 // Константи гексової сітки — мають збігатись з hexGrid.ts
-export const HEX_SIZE_LNG = 0.02
+export const HEX_SIZE_LNG = 0.015
 export const LAT_SCALE = Math.cos(49.55 * Math.PI / 180)
 export const HEX_SIZE_LAT = HEX_SIZE_LNG * LAT_SCALE
 export const SQRT3 = Math.sqrt(3)
