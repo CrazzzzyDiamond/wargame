@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
 import { CompanyType, Readiness, Morale, TerrainType } from '../units/types'
+import { UNIT_IMAGES } from '../assets/unitImages'
 import {
   getCompanyStatus,
   getActiveModifiers,
@@ -60,6 +61,7 @@ export function UnitPanel() {
   const terrainMap         = useGameStore(s => s.terrainMap)
   const selectedId         = useGameStore(s => s.selectedCompanyId)
   const selectCompany      = useGameStore(s => s.selectCompany)
+  const zoom               = useGameStore(s => s.zoom)
 
   if (!selectedId) return null
 
@@ -112,6 +114,23 @@ export function UnitPanel() {
             {battalion?.name ?? company.battalionId}
           </div>
         </div>
+      </div>
+
+      {/* Іконка типу роти — на всю ширину */}
+      <div style={{
+        borderBottom: '1px solid rgba(0, 207, 255, 0.2)',
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        lineHeight: 0,
+      }}>
+        <img
+          src={UNIT_IMAGES[company.type]}
+          style={{
+            width: '100%',
+            maxHeight: Math.round(60 + (zoom - 7) / (13 - 7) * 80),
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
       </div>
 
       {/* Тіло */}

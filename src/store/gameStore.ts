@@ -55,6 +55,10 @@ export interface GameState {
   // Дії — час
   setSpeed: (speed: GameSpeed) => void
   tick: (deltaSeconds: number) => void
+
+  // Поточний zoom карти
+  zoom: number
+  setZoom: (zoom: number) => void
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -108,6 +112,9 @@ export const useGameStore = create<GameState>((set) => ({
     brigadeDirectives.set(brigadeId, directive)
     return { brigadeDirectives }
   }),
+
+  zoom: 9,
+  setZoom: (zoom) => set({ zoom }),
 
   setSpeed: (speed) => set({ speed }),
 

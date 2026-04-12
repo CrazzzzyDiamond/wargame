@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Marker } from 'react-map-gl/mapbox'
+import { Marker, useMap } from 'react-map-gl/mapbox'
 import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
@@ -16,11 +16,27 @@ interface AnimatedPos {
 // Коефіцієнт інтерполяції за кадр — менше = плавніше і повільніше
 const LERP = 0.08
 
+// Розмір іконки залежно від zoom: zoom 7 → 24px, zoom 13 → 64px
+function iconSize(zoom: number): number {
+  const t = Math.max(0, Math.min(1, (zoom - 7) / (13 - 7)))
+  return Math.round(34 + t * 48)
+}
+
 export function UnitLayer() {
   const companies     = useGameStore(s => s.companies)
   const brigades      = useGameStore(s => s.brigades)
   const selectedId    = useGameStore(s => s.selectedCompanyId)
   const selectCompany = useGameStore(s => s.selectCompany)
+
+  const { current: map } = useMap()
+  const [zoom, setZoom] = useState(() => map?.getZoom() ?? 9)
+
+  useEffect(() => {
+    if (!map) return
+    const onZoom = () => setZoom(map.getZoom())
+    map.on('zoom', onZoom)
+    return () => { map.off('zoom', onZoom) }
+  }, [map])
 
   // Поточні анімовані позиції — не в стейті, бо оновлюємо кожен кадр через ref
   const animPos = useRef<Map<string, AnimatedPos>>(new Map())
@@ -99,8 +115,8 @@ export function UnitLayer() {
                   <img
                     src={BRIGADE_IMAGES[company.brigadeId]}
                     style={{
-                      width: 44,
-                      height: 44,
+                      width: iconSize(zoom),
+                      height: iconSize(zoom),
                       objectFit: 'contain',
                       display: 'block',
                       filter: selectedId === company.id ? 'drop-shadow(0 0 3px #ffdd00)' : 'drop-shadow(0 0 2px rgba(0,0,0,0.8))',
@@ -110,6 +126,7 @@ export function UnitLayer() {
                 <UnitIcon
                   type={company.type}
                   selected={selectedId === company.id}
+                  size={iconSize(zoom)}
                 />
               </div>
             </Marker>

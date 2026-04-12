@@ -52,7 +52,7 @@ const maskGeoJSON: FeatureCollection = {
 }
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick, setTerrainMap } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick, setTerrainMap, setZoom } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
 
   useEffect(() => {
@@ -146,6 +146,7 @@ export default function App() {
       maxBounds={MAP_BOUNDS}
       onClick={handleMapClick}
       onContextMenu={handleMapRightClick}
+      onZoom={e => setZoom(e.viewState.zoom)}
       onMouseMove={handleMouseMove}
 
     >
