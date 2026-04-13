@@ -1,7 +1,7 @@
 import { Brigade } from './Brigade'
 import { Battalion } from './Battalion'
 import { Company } from './Company'
-import { BrigadeType, BonusType, BattalionType, CompanyType } from './types'
+import { BrigadeType, BonusType, BattalionType, CompanyType, Side } from './types'
 import type { GameState } from '../store/gameStore'
 
 type Store = Pick<GameState, 'addBrigade' | 'addBattalion' | 'addCompany'>
@@ -101,4 +101,24 @@ export function seedScenario(store: Store) {
       ],
     },
   ])
+
+  // Юніти РФ — статична оборона
+  const rfBrigade = new Brigade({
+    id: 'rf-20-army',
+    name: '20-та загальновійськова армія РФ',
+    shortName: '20 ЗВА РФ',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.DefenseBonus, description: 'Підготовлена оборона', value: 1.2 },
+    hqPosition: { col: 14, row: 11 },
+  })
+  const rfBat = new Battalion({ id: 'rf-1bat', name: '1-й батальйон', type: BattalionType.Mechanized, brigadeId: 'rf-20-army' })
+  const rfCompanies = [
+    new Company({ id: 'rf-1bat-1co', name: '1-а лінійна рота',  type: CompanyType.Line, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 26, row: 8  } }),
+    new Company({ id: 'rf-1bat-2co', name: '2-а лінійна рота',  type: CompanyType.Line, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 28, row: 10 } }),
+    new Company({ id: 'rf-1bat-tnk', name: 'Танкова рота',      type: CompanyType.Tank, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 27, row: 9  } }),
+  ]
+  rfCompanies.forEach(c => rfBat.addCompany(c.id))
+  store.addBrigade(rfBrigade)
+  store.addBattalion(rfBat)
+  rfCompanies.forEach(c => store.addCompany(c))
 }

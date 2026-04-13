@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { Source, Layer } from 'react-map-gl/mapbox'
 import type { FeatureCollection, Polygon } from 'geojson'
 import { useGameStore } from '../store/gameStore'
-import { getHexesInRadius, hexLngLatVertices } from '../utils/hexUtils'
+import { hexLngLatVertices } from '../utils/hexUtils'
+import { buildVisibleHexSet } from '../utils/visibility'
 
 // Зовнішній контур зони операції (охоплює весь ігровий простір)
 const ZONE_RING: [number, number][] = [
@@ -14,18 +15,12 @@ export function FogLayer() {
 
   // Будуємо GeoJSON полігон туману: зона операції з "дірками" у видимих гексах
   const fogGeoJSON = useMemo((): FeatureCollection<Polygon> => {
-    // Збираємо унікальні видимі гекси від усіх розгорнутих рот
+    // Збираємо видимі гекси тільки від рот ЗСУ
+    const visibleKeys = buildVisibleHexSet(companies)
     const visible = new Map<string, [number, number][]>()
-
-    for (const company of companies.values()) {
-      if (!company.position) continue
-      const hexes = getHexesInRadius(company.position, company.visionRadius)
-      for (const hex of hexes) {
-        const key = `${hex.col},${hex.row}`
-        if (!visible.has(key)) {
-          visible.set(key, hexLngLatVertices(hex.col, hex.row))
-        }
-      }
+    for (const key of visibleKeys) {
+      const [col, row] = key.split(',').map(Number)
+      visible.set(key, hexLngLatVertices(col, row))
     }
 
     // Полігон = зовнішня рамка + дірки для кожного видимого гексу

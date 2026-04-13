@@ -4,7 +4,8 @@ import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { BrigadeType } from '../units/types'
+import { BrigadeType, Side } from '../units/types'
+import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playSound } from '../utils/sound'
 import airSelect from '../sound/air-select.mp3'
 
@@ -86,13 +87,19 @@ export function UnitLayer() {
     return () => cancelAnimationFrame(frameId)
   }, [companies])
 
+  const visibleHexes = buildVisibleHexSet(companies)
+
   return (
     <>
       {Array.from(companies.values())
         .filter(c => c.isDeployed())
+        .filter(c => isEnemyVisible(c, visibleHexes))
         .map(company => {
           const pos = animPos.current.get(company.id)
           if (!pos) return null
+
+          const isEnemy = company.side === Side.Russia
+          const barColor = isEnemy ? '#e74c3c' : '#4caf50'
 
           return (
             <Marker
@@ -102,6 +109,7 @@ export function UnitLayer() {
               anchor="center"
               onClick={(e) => {
                 e.originalEvent.stopPropagation()
+                if (isEnemy) return  // ворожі юніти не вибираються
                 const isAlreadySelected = selectedId === company.id
                 if (!isAlreadySelected) {
                   const brigade = brigades.get(company.brigadeId)
@@ -110,14 +118,14 @@ export function UnitLayer() {
                 selectCompany(isAlreadySelected ? null : company.id)
               }}
             >
-              <div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>
+              <div style={{ cursor: isEnemy ? 'default' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>
                 {/* Полоска strength над іконкою */}
                 <div style={{ width: iconSize(zoom), height: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
                   <div style={{
                     width: `${company.strength}%`,
                     height: '100%',
                     borderRadius: 2,
-                    backgroundColor: '#4caf50',
+                    backgroundColor: barColor,
                   }} />
                 </div>
                 {BRIGADE_IMAGES[company.brigadeId] && (
@@ -135,6 +143,7 @@ export function UnitLayer() {
                 <UnitIcon
                   type={company.type}
                   selected={selectedId === company.id}
+                  enemy={isEnemy}
                   size={iconSize(zoom)}
                 />
               </div>

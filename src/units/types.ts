@@ -1,3 +1,8 @@
+export enum Side {
+  Ukraine = 'ukraine',
+  Russia  = 'russia',
+}
+
 export enum BrigadeType {
   DSV     = 'dsv',
   Ground  = 'ground',

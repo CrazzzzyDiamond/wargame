@@ -1,4 +1,4 @@
-import { CompanyType, Readiness, Morale, EntrenchState } from './types'
+import { CompanyType, Readiness, Morale, EntrenchState, Side } from './types'
 
 // Позиція роти на гексовій сітці
 export interface HexPosition {
@@ -13,6 +13,7 @@ export class Company {
   readonly battalionId: string
   readonly brigadeId: string
 
+  readonly side: Side           // сторона конфлікту
   position: HexPosition | null  // null = не розгорнута на карті
   targetHex: HexPosition | null // кінцева точка наказаного маршруту
   movementProgress: number      // прогрес руху до наступного гексу (0–1)
@@ -30,12 +31,14 @@ export class Company {
     brigadeId: string
     position?: HexPosition
     strength?: number
+    side?: Side
   }) {
     this.id = params.id
     this.name = params.name
     this.type = params.type
     this.battalionId = params.battalionId
     this.brigadeId = params.brigadeId
+    this.side = params.side ?? Side.Ukraine
     this.position = params.position ?? null
     this.targetHex = null
     this.movementProgress = 0
