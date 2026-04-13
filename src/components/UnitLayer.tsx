@@ -111,6 +111,15 @@ export function UnitLayer() {
               }}
             >
               <div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>
+                {/* Полоска strength над іконкою */}
+                <div style={{ width: iconSize(zoom), height: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${company.strength}%`,
+                    height: '100%',
+                    borderRadius: 2,
+                    backgroundColor: '#4caf50',
+                  }} />
+                </div>
                 {BRIGADE_IMAGES[company.brigadeId] && (
                   <img
                     src={BRIGADE_IMAGES[company.brigadeId]}

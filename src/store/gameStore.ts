@@ -3,7 +3,7 @@ import type { Company } from '../units/Company'
 import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
-import { Directive, TerrainType } from '../units/types'
+import { Directive, TerrainType, EntrenchState, CompanyType } from '../units/types'
 import { stepToward } from '../utils/hexUtils'
 
 // Ігрових хвилин на 1 реальну секунду для кожної швидкості
@@ -47,6 +47,10 @@ export interface GameState {
   // Дії — переміщення
   moveCompany: (companyId: string, position: HexPosition) => void
 
+  // Дії — окопування (тільки Line)
+  startEntrench: (companyId: string) => void
+  leaveEntrench: (companyId: string) => void
+
   // Дії — вибір
   selectCompany: (companyId: string | null) => void
   selectHQ: (brigadeId: string | null) => void
@@ -70,7 +74,7 @@ export const useGameStore = create<GameState>((set) => ({
   selectedHQId: null,
   brigadeDirectives: new Map(),
   terrainMap: new Map(),
-  speed: 'paused',
+  speed: 'normal',
   elapsedSeconds: 0,
 
   addBrigade: (brigade) => set((state) => {
@@ -95,9 +99,32 @@ export const useGameStore = create<GameState>((set) => ({
     const companies = new Map(state.companies)
     const company = companies.get(companyId)
     if (!company) return {}
-    // Встановлюємо ціль — рух відбуватиметься через tick
+    // Заблокувати рух якщо окопана або копає
+    if (company.entrenchState === EntrenchState.Entrenched ||
+        company.entrenchState === EntrenchState.Entrenching) return {}
     company.targetHex = targetHex
     company.movementProgress = 0
+    return { companies }
+  }),
+
+  startEntrench: (companyId) => set((state) => {
+    const companies = new Map(state.companies)
+    const company = companies.get(companyId)
+    if (!company || company.type !== CompanyType.Line) return {}
+    if (company.entrenchState !== EntrenchState.None) return {}
+    company.entrenchState = EntrenchState.Entrenching
+    company.entrenchMinutesLeft = 240  // 4 ігрові години
+    company.targetHex = null           // скасовуємо рух
+    return { companies }
+  }),
+
+  leaveEntrench: (companyId) => set((state) => {
+    const companies = new Map(state.companies)
+    const company = companies.get(companyId)
+    if (!company) return {}
+    if (company.entrenchState !== EntrenchState.Entrenched) return {}
+    company.entrenchState = EntrenchState.Leaving
+    company.entrenchMinutesLeft = 60   // 1 ігрова година
     return { companies }
   }),
 
@@ -127,7 +154,22 @@ export const useGameStore = create<GameState>((set) => ({
     const companies = new Map(state.companies)
 
     for (const company of companies.values()) {
+      // Прогрес окопування
+      if (company.entrenchState === EntrenchState.Entrenching ||
+          company.entrenchState === EntrenchState.Leaving) {
+        company.entrenchMinutesLeft -= gameMinutes
+        if (company.entrenchMinutesLeft <= 0) {
+          company.entrenchMinutesLeft = 0
+          company.entrenchState = company.entrenchState === EntrenchState.Entrenching
+            ? EntrenchState.Entrenched
+            : EntrenchState.None
+        }
+      }
+
+      // Рух — блокується якщо окопана або копає
       if (!company.targetHex || !company.position) continue
+      if (company.entrenchState === EntrenchState.Entrenched ||
+          company.entrenchState === EntrenchState.Entrenching) continue
 
       company.movementProgress += hexProgress
 

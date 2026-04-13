@@ -47,6 +47,22 @@ export function getHexesInRadius(center: HexPosition, radius: number): HexPositi
   return result
 }
 
+// Відстань між двома гексами в кубічних координатах
+export function hexDistance(a: HexPosition, b: HexPosition): number {
+  const [aq, ar] = toAxial(a.col, a.row)
+  const [bq, br] = toAxial(b.col, b.row)
+  return Math.max(
+    Math.abs(aq - bq),
+    Math.abs(ar - br),
+    Math.abs((-aq - ar) - (-bq - br)),
+  )
+}
+
+// Усі гекси в кільці від minRange до maxRange включно
+export function getHexesInRing(center: HexPosition, minRange: number, maxRange: number): HexPosition[] {
+  return getHexesInRadius(center, maxRange).filter(h => hexDistance(center, h) >= minRange)
+}
+
 // Один крок з from у напрямку to — повертає сусідній гекс найближчий до цілі
 export function stepToward(from: HexPosition, to: HexPosition): HexPosition {
   if (from.col === to.col && from.row === to.row) return from

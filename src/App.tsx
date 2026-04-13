@@ -9,6 +9,8 @@ import { HQLayer } from './components/HQLayer'
 import { FogLayer } from './components/FogLayer'
 import { TerrainLayer } from './components/TerrainLayer'
 import { MovementLayer } from './components/MovementLayer'
+import { ArtilleryRangeLayer } from './components/ArtilleryRangeLayer'
+import { ZocLayer } from './components/ZocLayer'
 import { TimeControls } from './components/TimeControls'
 import { DirectiveMenu } from './components/DirectiveMenu'
 import { UnitPanel } from './components/UnitPanel'
@@ -52,7 +54,7 @@ const maskGeoJSON: FeatureCollection = {
 }
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, moveCompany, selectCompany, tick, setTerrainMap, setZoom } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, moveCompany, selectCompany, tick, setTerrainMap, setZoom } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
 
   useEffect(() => {
@@ -118,7 +120,22 @@ export default function App() {
     )
   }, [selectedCompanyId, hoveredHex])
 
-  // GeoJSON підсвіченого гексу
+  // GeoJSON усіх гексів із нашими юнітами (зелений)
+  const occupiedHexGeoJSON: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: Array.from(companies.values())
+      .filter(c => c.position)
+      .map(c => ({
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [hexLngLatVertices(c.position!.col, c.position!.row)],
+        },
+      })),
+  }
+
+  // GeoJSON підсвіченого гексу (жовтий — hover)
   const hexHighlightGeoJSON: FeatureCollection = hoveredHex && selectedCompanyId
     ? {
         type: 'FeatureCollection',
@@ -183,8 +200,23 @@ export default function App() {
         />
       </Source>
 
+      <Source type="geojson" data={occupiedHexGeoJSON}>
+        <Layer
+          id="occupied-hex-fill"
+          type="fill"
+          paint={{ 'fill-color': '#00ff88', 'fill-opacity': 0.18 }}
+        />
+        <Layer
+          id="occupied-hex-border"
+          type="line"
+          paint={{ 'line-color': '#00ff88', 'line-opacity': 0.8, 'line-width': 2 }}
+        />
+      </Source>
+
       <TerrainLayer />
+      <ZocLayer />
       <FogLayer />
+      <ArtilleryRangeLayer />
       <MovementLayer />
       <HQLayer />
       <UnitLayer />

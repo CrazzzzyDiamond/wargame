@@ -1,4 +1,4 @@
-import { CompanyType, Readiness, Morale } from './types'
+import { CompanyType, Readiness, Morale, EntrenchState } from './types'
 
 // Позиція роти на гексовій сітці
 export interface HexPosition {
@@ -18,6 +18,9 @@ export class Company {
   movementProgress: number      // прогрес руху до наступного гексу (0–1)
   readiness: Readiness
   morale: Morale
+  strength: number              // чисельність роти 0–100, витрачається в бою
+  entrenchState: EntrenchState  // стан окопування (тільки для Line)
+  entrenchMinutesLeft: number   // залишок ігрових хвилин до зміни стану
 
   constructor(params: {
     id: string
@@ -26,6 +29,7 @@ export class Company {
     battalionId: string
     brigadeId: string
     position?: HexPosition
+    strength?: number
   }) {
     this.id = params.id
     this.name = params.name
@@ -37,6 +41,9 @@ export class Company {
     this.movementProgress = 0
     this.readiness = Readiness.Ready
     this.morale = Morale.Steady
+    this.strength = params.strength ?? 100
+    this.entrenchState = EntrenchState.None
+    this.entrenchMinutesLeft = 0
   }
 
   // Чи знаходиться рота на карті

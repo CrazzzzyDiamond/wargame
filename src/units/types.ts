@@ -70,6 +70,13 @@ export enum TerrainType {
   Water  = 'water',   // вода — непрохідна
 }
 
+export enum EntrenchState {
+  None        = 'none',        // не в окопі
+  Entrenching = 'entrenching', // копає окоп (4 год)
+  Entrenched  = 'entrenched',  // в окопі — ZoC=4, нерухома
+  Leaving     = 'leaving',     // виходить з окопу (1 год)
+}
+
 export enum UnitStatus {
   Marching = 'marching', // на марші — є targetHex
   Holding  = 'holding',  // утримання позицій — директива Hold, нерухомий

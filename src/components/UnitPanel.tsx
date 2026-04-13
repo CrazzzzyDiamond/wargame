@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { CompanyType, Readiness, Morale, TerrainType } from '../units/types'
+import { CompanyType, Readiness, Morale, TerrainType, EntrenchState } from '../units/types'
 import { UNIT_IMAGES } from '../assets/unitImages'
 import {
   getCompanyStatus,
@@ -61,7 +61,8 @@ export function UnitPanel() {
   const terrainMap         = useGameStore(s => s.terrainMap)
   const selectedId         = useGameStore(s => s.selectedCompanyId)
   const selectCompany      = useGameStore(s => s.selectCompany)
-  const zoom               = useGameStore(s => s.zoom)
+  const startEntrench      = useGameStore(s => s.startEntrench)
+  const leaveEntrench      = useGameStore(s => s.leaveEntrench)
 
   if (!selectedId) return null
 
@@ -76,7 +77,7 @@ export function UnitPanel() {
   const terrain = company.position
     ? getTerrain(terrainMap, company.position.col, company.position.row)
     : TerrainType.Open
-  const modifiers = getActiveModifiers(status, terrain)
+  const modifiers = getActiveModifiers(status, terrain, company.entrenchState)
 
   return (
     <div style={{
@@ -124,12 +125,7 @@ export function UnitPanel() {
       }}>
         <img
           src={UNIT_IMAGES[company.type]}
-          style={{
-            width: '100%',
-            maxHeight: Math.round(60 + (zoom - 7) / (13 - 7) * 80),
-            objectFit: 'contain',
-            display: 'block',
-          }}
+          style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
@@ -175,6 +171,20 @@ export function UnitPanel() {
         <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '2px 0' }} />
 
         {/* Бойові параметри */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: '#8899aa' }}>Чисельність</span>
+            <span style={{ color: '#e8eaf0' }}>{company.strength}%</span>
+          </div>
+          <div style={{ width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              width: `${company.strength}%`,
+              height: '100%',
+              borderRadius: 3,
+              backgroundColor: '#4caf50',
+            }} />
+          </div>
+        </div>
         <Row label="Боєздатність">
           <span style={{ color: READINESS_COLOR[company.readiness] }}>
             ● {READINESS_LABEL[company.readiness]}
@@ -188,6 +198,73 @@ export function UnitPanel() {
         <Row label="Видимість">
           {company.visionRadius} {company.visionRadius === 1 ? 'гекс' : 'гекси'}
         </Row>
+
+        {/* Окопування — тільки для лінійної піхоти */}
+        {company.type === CompanyType.Line && (
+          <>
+            <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '2px 0' }} />
+            {company.entrenchState === EntrenchState.None && (
+              <button
+                onClick={() => startEntrench(company.id)}
+                style={{
+                  width: '100%', padding: '5px 0', marginTop: 2,
+                  backgroundColor: 'rgba(255,193,7,0.12)',
+                  border: '1px solid rgba(255,193,7,0.4)',
+                  borderRadius: 4, color: '#ffc107',
+                  fontSize: 12, cursor: 'pointer',
+                }}
+              >
+                ⛏ Окопатись
+              </button>
+            )}
+            {company.entrenchState === EntrenchState.Entrenching && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#ffc107', fontSize: 12 }}>⛏ Копає окоп...</span>
+                  <span style={{ color: '#8899aa', fontSize: 12 }}>
+                    {Math.ceil(company.entrenchMinutesLeft / 60)} год
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${((240 - company.entrenchMinutesLeft) / 240) * 100}%`,
+                    height: '100%', borderRadius: 2, backgroundColor: '#ffc107',
+                  }} />
+                </div>
+              </div>
+            )}
+            {company.entrenchState === EntrenchState.Entrenched && (
+              <button
+                onClick={() => leaveEntrench(company.id)}
+                style={{
+                  width: '100%', padding: '5px 0', marginTop: 2,
+                  backgroundColor: 'rgba(76,175,80,0.12)',
+                  border: '1px solid rgba(76,175,80,0.4)',
+                  borderRadius: 4, color: '#4caf50',
+                  fontSize: 12, cursor: 'pointer',
+                }}
+              >
+                🪖 В окопі — покинути
+              </button>
+            )}
+            {company.entrenchState === EntrenchState.Leaving && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#8899aa', fontSize: 12 }}>Виходить з окопу...</span>
+                  <span style={{ color: '#8899aa', fontSize: 12 }}>
+                    {Math.ceil(company.entrenchMinutesLeft / 60)} год
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${((60 - company.entrenchMinutesLeft) / 60) * 100}%`,
+                    height: '100%', borderRadius: 2, backgroundColor: '#8899aa',
+                  }} />
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Футер */}
