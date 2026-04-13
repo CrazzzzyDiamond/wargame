@@ -7,6 +7,7 @@ import { BRIGADE_IMAGES } from '../assets/brigadeImages'
 import { BrigadeType, Side } from '../units/types'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playSound } from '../utils/sound'
+import { playUnitSound } from '../utils/unitSounds'
 import airSelect from '../sound/air-select.mp3'
 
 interface AnimatedPos {
@@ -93,7 +94,7 @@ export function UnitLayer() {
     <>
       {Array.from(companies.values())
         .filter(c => c.isDeployed())
-        .filter(c => isEnemyVisible(c, visibleHexes))
+        .filter(c => isEnemyVisible(c, visibleHexes, companies))
         .map(company => {
           const pos = animPos.current.get(company.id)
           if (!pos) return null
@@ -112,8 +113,11 @@ export function UnitLayer() {
                 if (isEnemy) return  // ворожі юніти не вибираються
                 const isAlreadySelected = selectedId === company.id
                 if (!isAlreadySelected) {
-                  const brigade = brigades.get(company.brigadeId)
-                  if (brigade?.type === BrigadeType.DSV) playSound(airSelect)
+                  const played = playUnitSound(company.type, 'select')
+                  if (!played) {
+                    const brigade = brigades.get(company.brigadeId)
+                    if (brigade?.type === BrigadeType.DSV) playSound(airSelect)
+                  }
                 }
                 selectCompany(isAlreadySelected ? null : company.id)
               }}

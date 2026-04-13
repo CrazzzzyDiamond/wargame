@@ -22,6 +22,8 @@ export class Company {
   strength: number              // чисельність роти 0–100, витрачається в бою
   entrenchState: EntrenchState  // стан окопування (тільки для Line)
   entrenchMinutesLeft: number   // залишок ігрових хвилин до зміни стану
+  inCombat: boolean             // юніт у бойовому контакті цього тіку
+  isRetreating: boolean         // відступає під вогнем — штраф до швидкості і захисту
 
   constructor(params: {
     id: string
@@ -47,6 +49,8 @@ export class Company {
     this.strength = params.strength ?? 100
     this.entrenchState = EntrenchState.None
     this.entrenchMinutesLeft = 0
+    this.inCombat = false
+    this.isRetreating = false
   }
 
   // Чи знаходиться рота на карті

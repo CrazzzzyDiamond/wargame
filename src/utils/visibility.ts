@@ -1,6 +1,6 @@
 import type { Company } from '../units/Company'
-import { Side } from '../units/types'
-import { getHexesInRadius } from './hexUtils'
+import { Side, CompanyType } from '../units/types'
+import { getHexesInRadius, hexDistance } from './hexUtils'
 
 // Будує set видимих гексів на основі позицій рот ЗСУ
 export function buildVisibleHexSet(companies: Map<string, Company>): Set<string> {
@@ -20,8 +20,21 @@ export function buildVisibleHexSet(companies: Map<string, Company>): Set<string>
 }
 
 // Чи видимий ворожий юніт у поточний момент
-export function isEnemyVisible(company: Company, visibleHexes: Set<string>): boolean {
+// ССО невидимі завжди, крім: у бою або впритул (відстань ≤ 1) до дружнього юніта
+export function isEnemyVisible(company: Company, visibleHexes: Set<string>, allCompanies: Map<string, Company>): boolean {
   if (company.side !== Side.Russia) return true
   if (!company.position) return false
+
+  // ССО — особлива перевірка
+  if (company.type === CompanyType.Special) {
+    if (company.inCombat) return true
+    // Видимий якщо впритул (≤1 гекс) до будь-якого юніта ЗСУ
+    for (const friendly of allCompanies.values()) {
+      if (friendly.side !== Side.Ukraine || !friendly.position) continue
+      if (hexDistance(company.position, friendly.position) <= 1) return true
+    }
+    return false
+  }
+
   return visibleHexes.has(`${company.position.col},${company.position.row}`)
 }

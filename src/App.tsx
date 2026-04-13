@@ -20,6 +20,7 @@ import { INITIAL_VIEW, MAP_BOUNDS, ZONE } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain } from './utils/terrainAnalysis'
 import { playSound } from './utils/sound'
+import { playUnitSound } from './utils/unitSounds'
 import { BrigadeType } from './units/types'
 import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
@@ -102,8 +103,10 @@ export default function App() {
     if (!selectedCompanyId) return
     e.preventDefault()
     const { companies, brigades } = useGameStore.getState()
-    const brigade = brigades.get(companies.get(selectedCompanyId)?.brigadeId ?? '')
-    if (brigade?.type === BrigadeType.DSV) playSound(airMove)
+    const company = companies.get(selectedCompanyId)
+    const brigade = brigades.get(company?.brigadeId ?? '')
+    const played = playUnitSound(company!.type, 'move')
+    if (!played && brigade?.type === BrigadeType.DSV) playSound(airMove)
     const hex = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
     moveCompany(selectedCompanyId, hex)
   }, [selectedCompanyId, moveCompany])

@@ -3,8 +3,11 @@ import type { Company } from '../units/Company'
 import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
-import { Directive, TerrainType, EntrenchState, CompanyType } from '../units/types'
-import { stepToward } from '../utils/hexUtils'
+import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness } from '../units/types'
+import { stepToward, hexDistance } from '../utils/hexUtils'
+import { getTerrain } from '../utils/terrainAnalysis'
+import { getZocRadius } from '../utils/unitStatus'
+import { calcDamage } from '../utils/combat'
 
 // Ігрових хвилин на 1 реальну секунду для кожної швидкості
 const SPEED_MULTIPLIERS: Record<GameSpeed, number> = {
@@ -152,9 +155,10 @@ export const useGameStore = create<GameState>((set) => ({
     const hexProgress = gameMinutes / MINUTES_PER_HEX
 
     const companies = new Map(state.companies)
+    const brigades  = state.brigades
 
+    // ---- Окопування ----
     for (const company of companies.values()) {
-      // Прогрес окопування
       if (company.entrenchState === EntrenchState.Entrenching ||
           company.entrenchState === EntrenchState.Leaving) {
         company.entrenchMinutesLeft -= gameMinutes
@@ -165,15 +169,112 @@ export const useGameStore = create<GameState>((set) => ({
             : EntrenchState.None
         }
       }
+    }
 
-      // Рух — блокується якщо окопана або копає
-      if (!company.targetHex || !company.position) continue
+    // ---- Бойовий контакт ----
+    // Для кожного юніта збираємо список ворожих атакуючих (хто покриває його гекс своїм ZoC)
+    // ССО ігнорується як ціль ZoC перевірки (не зупиняється)
+    const attackersOf = new Map<string, string[]>()  // companyId → [attackerId, ...]
+
+    const allDeployed = Array.from(companies.values()).filter(c => c.position)
+
+    for (const defender of allDeployed) {
+      const enemies = allDeployed.filter(c => c.side !== defender.side && c.position)
+      const attackers = enemies.filter(enemy => {
+        const zoc = getZocRadius(enemy)
+        return zoc > 0 && hexDistance(defender.position!, enemy.position!) <= zoc
+      })
+      attackersOf.set(defender.id, attackers.map(a => a.id))
+    }
+
+    // Скидаємо інCombat і isRetreating, потім виставляємо заново
+    for (const company of companies.values()) {
+      company.inCombat = false
+      if (!company.targetHex) company.isRetreating = false
+    }
+
+    // Накопичуємо дамаг окремо, щоб застосувати після всіх розрахунків
+    const pendingDamage = new Map<string, number>()
+
+    for (const [defenderId, attackerIds] of attackersOf) {
+      if (attackerIds.length === 0) continue
+
+      const defender = companies.get(defenderId)!
+
+      // ССО не зупиняється ZoC, але все одно бере і дає дамаг
+      const isSSODefender = defender.type === CompanyType.Special
+      if (!isSSODefender) defender.inCombat = true
+
+      // Відступ під вогнем: піхота у бою з наказом руху
+      if (!isSSODefender && defender.targetHex && defender.side === Side.Ukraine) {
+        defender.isRetreating = true
+      }
+
+      // Дамаг по захиснику від кожного атакуючого
+      const defTerrain = getTerrain(state.terrainMap, defender.position!.col, defender.position!.row)
+      for (const attackerId of attackerIds) {
+        const attacker = companies.get(attackerId)!
+        const dmg = calcDamage(defTerrain, defender.entrenchState, attackerIds.length, attacker.type, defender.type, defender.isRetreating)
+        pendingDamage.set(defenderId, (pendingDamage.get(defenderId) ?? 0) + dmg)
+      }
+
+      // Відповідний вогонь: захисник б'є по кожному атакуючому
+      for (const attackerId of attackerIds) {
+        const attacker = companies.get(attackerId)!
+        attacker.inCombat = true
+        const atkTerrain = getTerrain(state.terrainMap, attacker.position!.col, attacker.position!.row)
+        const counterCount = (attackersOf.get(attackerId) ?? []).length || 1
+        const dmg = calcDamage(atkTerrain, attacker.entrenchState, counterCount, defender.type, attacker.type, attacker.isRetreating)
+        pendingDamage.set(attackerId, (pendingDamage.get(attackerId) ?? 0) + dmg)
+      }
+    }
+
+    // Застосовуємо дамаг і оновлюємо readiness
+    const toRemove: string[] = []
+
+    for (const [id, dmg] of pendingDamage) {
+      const company = companies.get(id)!
+      company.strength = Math.max(0, company.strength - dmg)
+
+      // Readiness залежить від strength
+      if (company.strength <= 0) {
+        toRemove.push(id)
+        continue
+      }
+      if (company.strength < 30) {
+        company.readiness = Readiness.Exhausted
+      } else if (company.strength < 60) {
+        company.readiness = Readiness.Strained
+      }
+
+      // Авто-відступ: Exhausted → рухаємо до HQ бригади
+      if (company.readiness === Readiness.Exhausted && company.side === Side.Ukraine) {
+        const hq = brigades.get(company.brigadeId)?.hqPosition
+        if (hq) {
+          company.targetHex = hq
+          company.inCombat = false
+        }
+      }
+    }
+
+    for (const id of toRemove) companies.delete(id)
+
+    // ---- Рух ----
+    for (const company of companies.values()) {
+      // ССО рухається навіть у бою; решта — блокується
+      const isSSO = company.type === CompanyType.Special
+      if (!isSSO && company.inCombat) continue
       if (company.entrenchState === EntrenchState.Entrenched ||
           company.entrenchState === EntrenchState.Entrenching) continue
+      if (!company.targetHex || !company.position) continue
 
-      company.movementProgress += hexProgress
+      // Recon +50% швидкість; відступ під вогнем −50%
+      let speedMult = 1.0
+      if (company.type === CompanyType.Recon)  speedMult *= 1.5
+      if (company.isRetreating)                speedMult *= 0.5
 
-      // Один крок за раз — при накопиченні повного прогресу
+      company.movementProgress += hexProgress * speedMult
+
       while (company.movementProgress >= 1.0 && company.targetHex) {
         company.movementProgress -= 1.0
         const next = stepToward(company.position, company.targetHex)
