@@ -24,6 +24,8 @@ export class Company {
   entrenchMinutesLeft: number   // залишок ігрових хвилин до зміни стану
   inCombat: boolean             // юніт у бойовому контакті цього тіку
   isRetreating: boolean         // відступає під вогнем — штраф до швидкості і захисту
+  attackTargetHex: HexPosition | null  // призначена ціль для артилерійського вогню
+  attackCooldownMinutes: number        // залишок хвилин до наступного пострілу
 
   constructor(params: {
     id: string
@@ -51,6 +53,8 @@ export class Company {
     this.entrenchMinutesLeft = 0
     this.inCombat = false
     this.isRetreating = false
+    this.attackTargetHex = null
+    this.attackCooldownMinutes = 0
   }
 
   // Чи знаходиться рота на карті

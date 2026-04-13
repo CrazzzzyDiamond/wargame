@@ -4,9 +4,13 @@ import { playSound } from './sound'
 export type SoundEvent = 'select' | 'move' | 'attack'
 
 // Vite імпортує всі mp3 файли з папок юнітів
-const SSO_SELECT = Object.values(import.meta.glob('../sound/sso/select/*.mp3', { eager: true, import: 'default' })) as string[]
-const SSO_MOVE   = Object.values(import.meta.glob('../sound/sso/move/*.mp3',   { eager: true, import: 'default' })) as string[]
-const SSO_ATTACK = Object.values(import.meta.glob('../sound/sso/attack/*.mp3', { eager: true, import: 'default' })) as string[]
+const SSO_SELECT    = Object.values(import.meta.glob('../sound/sso/select/*.mp3',    { eager: true, import: 'default' })) as string[]
+const SSO_MOVE      = Object.values(import.meta.glob('../sound/sso/move/*.mp3',      { eager: true, import: 'default' })) as string[]
+const SSO_ATTACK    = Object.values(import.meta.glob('../sound/sso/attack/*.mp3',    { eager: true, import: 'default' })) as string[]
+
+const ASSAULT_SELECT = Object.values(import.meta.glob('../sound/assault/select/*.mp3', { eager: true, import: 'default' })) as string[]
+const ASSAULT_MOVE   = Object.values(import.meta.glob('../sound/assault/move/*.mp3',   { eager: true, import: 'default' })) as string[]
+const ASSAULT_ATTACK = Object.values(import.meta.glob('../sound/assault/attack/*.mp3', { eager: true, import: 'default' })) as string[]
 
 // Таблиця звуків по типу юніта і події
 const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
@@ -14,6 +18,11 @@ const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
     select: SSO_SELECT,
     move:   SSO_MOVE,
     attack: SSO_ATTACK,
+  },
+  [CompanyType.Assault]: {
+    select: ASSAULT_SELECT,
+    move:   ASSAULT_MOVE,
+    attack: ASSAULT_ATTACK,
   },
 }
 

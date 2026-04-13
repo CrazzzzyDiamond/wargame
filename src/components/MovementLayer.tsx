@@ -7,38 +7,30 @@ import { hexToLngLat } from '../utils/hexUtils'
 export function MovementLayer() {
   const companies = useGameStore(s => s.companies)
 
-  const { lines, targets } = useMemo(() => {
+  const { lines, targets, artTargets } = useMemo(() => {
     const lineFeatures: FeatureCollection<LineString>['features'] = []
     const targetFeatures: FeatureCollection<Point>['features'] = []
+    const artTargetFeatures: FeatureCollection<Point>['features'] = []
 
     for (const company of companies.values()) {
-      if (!company.position || !company.targetHex) continue
+      if (company.position && company.targetHex) {
+        const [fromLng, fromLat] = hexToLngLat(company.position.col, company.position.row)
+        const [toLng, toLat]     = hexToLngLat(company.targetHex.col, company.targetHex.row)
+        lineFeatures.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[fromLng, fromLat], [toLng, toLat]] } })
+        targetFeatures.push({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [toLng, toLat] } })
+      }
 
-      const [fromLng, fromLat] = hexToLngLat(company.position.col, company.position.row)
-      const [toLng, toLat]     = hexToLngLat(company.targetHex.col, company.targetHex.row)
-
-      lineFeatures.push({
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: [[fromLng, fromLat], [toLng, toLat]],
-        },
-      })
-
-      targetFeatures.push({
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Point',
-          coordinates: [toLng, toLat],
-        },
-      })
+      // Ціль артилерійського вогню
+      if (company.position && company.attackTargetHex) {
+        const [lng, lat] = hexToLngLat(company.attackTargetHex.col, company.attackTargetHex.row)
+        artTargetFeatures.push({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [lng, lat] } })
+      }
     }
 
     return {
-      lines:   { type: 'FeatureCollection' as const, features: lineFeatures },
-      targets: { type: 'FeatureCollection' as const, features: targetFeatures },
+      lines:      { type: 'FeatureCollection' as const, features: lineFeatures },
+      targets:    { type: 'FeatureCollection' as const, features: targetFeatures },
+      artTargets: { type: 'FeatureCollection' as const, features: artTargetFeatures },
     }
   }, [companies])
 
@@ -68,6 +60,29 @@ export function MovementLayer() {
             'circle-stroke-width': 2,
             'circle-opacity': 0,
             'circle-stroke-opacity': 0.8,
+          }}
+        />
+      </Source>
+
+      <Source type="geojson" data={artTargets}>
+        <Layer
+          id="artillery-targets-outer"
+          type="circle"
+          paint={{
+            'circle-radius': 10,
+            'circle-color': 'transparent',
+            'circle-stroke-color': '#e74c3c',
+            'circle-stroke-width': 2,
+            'circle-stroke-opacity': 0.9,
+          }}
+        />
+        <Layer
+          id="artillery-targets-inner"
+          type="circle"
+          paint={{
+            'circle-radius': 3,
+            'circle-color': '#e74c3c',
+            'circle-opacity': 0.9,
           }}
         />
       </Source>

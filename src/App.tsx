@@ -21,7 +21,7 @@ import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain } from './utils/terrainAnalysis'
 import { playSound } from './utils/sound'
 import { playUnitSound } from './utils/unitSounds'
-import { BrigadeType } from './units/types'
+import { BrigadeType, CompanyType } from './units/types'
 import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
 
@@ -55,7 +55,7 @@ const maskGeoJSON: FeatureCollection = {
 }
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, moveCompany, selectCompany, tick, setTerrainMap, setZoom } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, moveCompany, selectCompany, tick, setTerrainMap, setZoom, setAttackTarget } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
 
   useEffect(() => {
@@ -105,10 +105,21 @@ export default function App() {
     const { companies, brigades } = useGameStore.getState()
     const company = companies.get(selectedCompanyId)
     const brigade = brigades.get(company?.brigadeId ?? '')
-    const played = playUnitSound(company!.type, 'move')
-    if (!played && brigade?.type === BrigadeType.DSV) playSound(airMove)
     const hex = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
-    moveCompany(selectedCompanyId, hex)
+
+    const hasEnemy = Array.from(companies.values()).some(c =>
+      c.side !== company?.side && c.position?.col === hex.col && c.position?.row === hex.row
+    )
+
+    if (company?.type === CompanyType.Artillery && hasEnemy) {
+      // Артилерія + ворог на гексі → встановити ціль атаки
+      setAttackTarget(selectedCompanyId, hex)
+    } else {
+      // Всі інші випадки → рух
+      const played = playUnitSound(company!.type, 'move')
+      if (!played && brigade?.type === BrigadeType.DSV) playSound(airMove)
+      moveCompany(selectedCompanyId, hex)
+    }
   }, [selectedCompanyId, moveCompany])
 
   // Рух миші — підсвічуємо гекс під курсором якщо є вибраний юніт

@@ -3,11 +3,11 @@ import type { Company } from '../units/Company'
 import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
-import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness } from '../units/types'
+import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness, Morale } from '../units/types'
 import { stepToward, hexDistance } from '../utils/hexUtils'
 import { getTerrain } from '../utils/terrainAnalysis'
 import { getZocRadius } from '../utils/unitStatus'
-import { calcDamage } from '../utils/combat'
+import { calcDamage, ARTILLERY_MORALE_DAMAGE } from '../utils/combat'
 
 // Ігрових хвилин на 1 реальну секунду для кожної швидкості
 const SPEED_MULTIPLIERS: Record<GameSpeed, number> = {
@@ -53,6 +53,9 @@ export interface GameState {
   // Дії — окопування (тільки Line)
   startEntrench: (companyId: string) => void
   leaveEntrench: (companyId: string) => void
+
+  // Дії — артилерійський вогонь
+  setAttackTarget: (companyId: string, hex: HexPosition | null) => void
 
   // Дії — вибір
   selectCompany: (companyId: string | null) => void
@@ -131,6 +134,14 @@ export const useGameStore = create<GameState>((set) => ({
     return { companies }
   }),
 
+  setAttackTarget: (companyId, hex) => set((state) => {
+    const companies = new Map(state.companies)
+    const company = companies.get(companyId)
+    if (!company || company.type !== CompanyType.Artillery) return {}
+    company.attackTargetHex = hex
+    return { companies }
+  }),
+
   setTerrainMap: (terrain) => set({ terrainMap: terrain }),
 
   selectCompany: (companyId) => set({ selectedCompanyId: companyId }),
@@ -194,19 +205,20 @@ export const useGameStore = create<GameState>((set) => ({
     }
 
     // Накопичуємо дамаг окремо, щоб застосувати після всіх розрахунків
-    const pendingDamage = new Map<string, number>()
+    const pendingDamage      = new Map<string, number>()
+    const pendingMoraleDamage = new Map<string, number>()
 
     for (const [defenderId, attackerIds] of attackersOf) {
       if (attackerIds.length === 0) continue
 
       const defender = companies.get(defenderId)!
 
-      // ССО не зупиняється ZoC, але все одно бере і дає дамаг
-      const isSSODefender = defender.type === CompanyType.Special
-      if (!isSSODefender) defender.inCombat = true
+      // ССО і танки не зупиняються ZoC — рухаються навіть у бою
+      const isMobile = defender.type === CompanyType.Special || defender.type === CompanyType.Tank
+      if (!isMobile) defender.inCombat = true
 
-      // Відступ під вогнем: піхота у бою з наказом руху
-      if (!isSSODefender && defender.targetHex && defender.side === Side.Ukraine) {
+      // Відступ під вогнем: не-мобільна піхота у бою з наказом руху
+      if (!isMobile && defender.targetHex && defender.side === Side.Ukraine) {
         defender.isRetreating = true
       }
 
@@ -214,8 +226,16 @@ export const useGameStore = create<GameState>((set) => ({
       const defTerrain = getTerrain(state.terrainMap, defender.position!.col, defender.position!.row)
       for (const attackerId of attackerIds) {
         const attacker = companies.get(attackerId)!
-        const dmg = calcDamage(defTerrain, defender.entrenchState, attackerIds.length, attacker.type, defender.type, defender.isRetreating)
+        const atkTerrain = getTerrain(state.terrainMap, attacker.position!.col, attacker.position!.row)
+        const dmg = calcDamage(defTerrain, defender.entrenchState, attackerIds.length, attacker.type, defender.type, defender.isRetreating, atkTerrain, attacker.morale, defender.morale)
         pendingDamage.set(defenderId, (pendingDamage.get(defenderId) ?? 0) + dmg)
+
+        // Артилерія б'є по morale окопаної піхоти незалежно від укриття
+        if (attacker.type === CompanyType.Artillery &&
+            defender.type === CompanyType.Line &&
+            defender.entrenchState === EntrenchState.Entrenched) {
+          pendingMoraleDamage.set(defenderId, (pendingMoraleDamage.get(defenderId) ?? 0) + ARTILLERY_MORALE_DAMAGE)
+        }
       }
 
       // Відповідний вогонь: захисник б'є по кожному атакуючому
@@ -224,7 +244,7 @@ export const useGameStore = create<GameState>((set) => ({
         attacker.inCombat = true
         const atkTerrain = getTerrain(state.terrainMap, attacker.position!.col, attacker.position!.row)
         const counterCount = (attackersOf.get(attackerId) ?? []).length || 1
-        const dmg = calcDamage(atkTerrain, attacker.entrenchState, counterCount, defender.type, attacker.type, attacker.isRetreating)
+        const dmg = calcDamage(atkTerrain, attacker.entrenchState, counterCount, defender.type, attacker.type, attacker.isRetreating, defTerrain, defender.morale, attacker.morale)
         pendingDamage.set(attackerId, (pendingDamage.get(attackerId) ?? 0) + dmg)
       }
     }
@@ -247,8 +267,10 @@ export const useGameStore = create<GameState>((set) => ({
         company.readiness = Readiness.Strained
       }
 
-      // Авто-відступ: Exhausted → рухаємо до HQ бригади
-      if (company.readiness === Readiness.Exhausted && company.side === Side.Ukraine) {
+      // Авто-відступ: Exhausted → рухаємо до HQ, але НЕ якщо окопана лінійна
+      const isEntrenched = company.type === CompanyType.Line &&
+                           company.entrenchState === EntrenchState.Entrenched
+      if (company.readiness === Readiness.Exhausted && company.side === Side.Ukraine && !isEntrenched) {
         const hq = brigades.get(company.brigadeId)?.hqPosition
         if (hq) {
           company.targetHex = hq
@@ -257,13 +279,87 @@ export const useGameStore = create<GameState>((set) => ({
       }
     }
 
+    // Застосовуємо дамаг по morale (артилерія по окопаній піхоті)
+    const MORALE_STAGES = [Morale.High, Morale.Steady, Morale.Shaken, Morale.Panic]
+    for (const [id, dmg] of pendingMoraleDamage) {
+      const company = companies.get(id)
+      if (!company) continue
+      const currentIdx = MORALE_STAGES.indexOf(company.morale)
+      // Накопичуємо дробовий дамаг: кожен 1.0 = один крок вниз по morale
+      const steps = Math.floor(dmg)
+      const newIdx = Math.min(MORALE_STAGES.length - 1, currentIdx + steps)
+      company.morale = MORALE_STAGES[newIdx]
+    }
+
     for (const id of toRemove) companies.delete(id)
+
+    // ---- Артилерійський вогонь ----
+    const ARTILLERY_COOLDOWN_MINUTES = 30  // cooldown між пострілами
+    const artToRemove: string[] = []
+
+    for (const artillery of companies.values()) {
+      if (artillery.type !== CompanyType.Artillery) continue
+      if (!artillery.position) continue
+
+      // Знижуємо cooldown
+      if (artillery.attackCooldownMinutes > 0) {
+        artillery.attackCooldownMinutes = Math.max(0, artillery.attackCooldownMinutes - gameMinutes)
+        continue
+      }
+
+      // Визначаємо ціль: ручна або авто (найближчий ворог у зоні ураження)
+      const range = { min: 4, max: 9 }
+      let targetHex = artillery.attackTargetHex
+
+      if (!targetHex) {
+        // Авто-режим: шукаємо найближчого ворога в зоні ураження
+        let bestDist = Infinity
+        for (const enemy of companies.values()) {
+          if (enemy.side === artillery.side || !enemy.position) continue
+          const dist = hexDistance(artillery.position, enemy.position)
+          if (dist >= range.min && dist <= range.max && dist < bestDist) {
+            bestDist = dist
+            targetHex = enemy.position
+          }
+        }
+      }
+
+      if (!targetHex) continue
+
+      // Перевіряємо що ціль в зоні ураження
+      const dist = hexDistance(artillery.position, targetHex)
+      if (dist < range.min || dist > range.max) {
+        artillery.attackTargetHex = null
+        continue
+      }
+
+      // Б'ємо по всіх ворогах на цільовому гексі
+      for (const target of companies.values()) {
+        if (target.side === artillery.side || !target.position) continue
+        if (target.position.col !== targetHex.col || target.position.row !== targetHex.row) continue
+
+        const targetTerrain = getTerrain(state.terrainMap, target.position.col, target.position.row)
+        const dmg = calcDamage(targetTerrain, target.entrenchState, 1, CompanyType.Artillery, target.type)
+        target.strength = Math.max(0, target.strength - dmg)
+        if (target.strength <= 0) artToRemove.push(target.id)
+        else if (target.strength < 30) target.readiness = Readiness.Exhausted
+        else if (target.strength < 60) target.readiness = Readiness.Strained
+      }
+
+      artillery.attackCooldownMinutes = ARTILLERY_COOLDOWN_MINUTES
+    }
+
+    for (const id of artToRemove) companies.delete(id)
 
     // ---- Рух ----
     for (const company of companies.values()) {
-      // ССО рухається навіть у бою; решта — блокується
-      const isSSO = company.type === CompanyType.Special
-      if (!isSSO && company.inCombat) continue
+      // ССО і танки рухаються навіть у бою; решта — блокується
+      const isMobileUnit = company.type === CompanyType.Special || company.type === CompanyType.Tank
+      if (!isMobileUnit && company.inCombat) continue
+      // Окопана лінійна піхота не рухається навіть при Panic
+      if (company.type === CompanyType.Line &&
+          company.entrenchState === EntrenchState.Entrenched &&
+          company.morale === Morale.Panic) { company.targetHex = null; continue }
       if (company.entrenchState === EntrenchState.Entrenched ||
           company.entrenchState === EntrenchState.Entrenching) continue
       if (!company.targetHex || !company.position) continue
