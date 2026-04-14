@@ -6,9 +6,9 @@ import { hexLngLatVertices } from '../utils/hexUtils'
 import { buildVisibleHexSet } from '../utils/visibility'
 import { MAP } from '../config/theme'
 
-// Зовнішній контур зони операції (охоплює весь ігровий простір)
-const ZONE_RING: [number, number][] = [
-  [36.3, 50.1], [38.3, 50.1], [38.3, 49.0], [36.3, 49.0], [36.3, 50.1],
+// Зовнішній контур туману — весь світ, щоб туман виглядав однаково скрізь
+const WORLD_RING: [number, number][] = [
+  [-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90],
 ]
 
 interface Props {
@@ -30,7 +30,7 @@ export function FogLayer({ disabled = false }: Props) {
 
     // Полігон = зовнішня рамка + дірки для кожного видимого гексу
     const coordinates: [number, number][][] = [
-      ZONE_RING,
+      WORLD_RING,
       ...visible.values(),
     ]
 

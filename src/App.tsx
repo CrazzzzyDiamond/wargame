@@ -15,7 +15,7 @@ import { DirectiveMenu } from './components/DirectiveMenu'
 import { UnitPanel } from './components/UnitPanel'
 import { useGameStore } from './store/gameStore'
 import { seedScenario } from './units/seed'
-import { INITIAL_VIEW, MAP_BOUNDS, ZONE } from './config/mapConfig'
+import { INITIAL_VIEW, MAP_BOUNDS } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain, saveTerrainCache } from './utils/terrainAnalysis'
 import { TerrainEditor } from './components/TerrainEditor'
@@ -34,28 +34,7 @@ const TICK_DELTA_SEC    = TICK_INTERVAL_MS / 1000
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
-const ZONE_RING: [number, number][] = [
-  [ZONE.lngMin, ZONE.latMax],
-  [ZONE.lngMax, ZONE.latMax],
-  [ZONE.lngMax, ZONE.latMin],
-  [ZONE.lngMin, ZONE.latMin],
-  [ZONE.lngMin, ZONE.latMax],
-]
 
-const maskGeoJSON: FeatureCollection = {
-  type: 'FeatureCollection',
-  features: [{
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]],
-        [...ZONE_RING].reverse(),
-      ],
-    },
-  }],
-}
 
 export default function App() {
   const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, setAssaultTarget, terrainMap } = useGameStore()
@@ -260,14 +239,6 @@ export default function App() {
       onMouseMove={handleMouseMove}
 
     >
-      <Source type="geojson" data={maskGeoJSON}>
-        <Layer
-          id="operation-mask"
-          type="fill"
-          paint={{ 'fill-color': MAP.mask, 'fill-opacity': 0.6 }}
-        />
-      </Source>
-
       <Source type="geojson" data={hexGridGeoJSON}>
         <Layer
           id="hex-grid"
