@@ -5,7 +5,6 @@ import type { FeatureCollection } from 'geojson'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { hexGridGeoJSON } from './hexGrid'
 import { UnitLayer } from './components/UnitLayer'
-import { HQLayer } from './components/HQLayer'
 import { FogLayer } from './components/FogLayer'
 import { TerrainLayer } from './components/TerrainLayer'
 import { MovementLayer } from './components/MovementLayer'
@@ -260,7 +259,7 @@ export default function App() {
       <FogLayer />
       <ArtilleryRangeLayer />
       <MovementLayer />
-      <HQLayer />
+
       <UnitLayer />
     </Map>
     <TimeControls />

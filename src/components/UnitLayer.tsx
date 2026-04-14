@@ -22,7 +22,7 @@ const LERP = 0.08
 // Розмір іконки залежно від zoom: zoom 7 → 24px, zoom 13 → 64px
 function iconSize(zoom: number): number {
   const t = Math.max(0, Math.min(1, (zoom - 7) / (13 - 7)))
-  return Math.round(34 + t * 48)
+  return Math.round(20 + t * 28)
 }
 
 export function UnitLayer() {
@@ -146,33 +146,41 @@ export function UnitLayer() {
                   )}
                 </div>
 
-                {/* Полоска strength над іконкою */}
-                <div style={{ width: iconSize(zoom), height: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
+                {/* Шеврон + іконка — єдиний прямокутник */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                  {/* Полоска strength на всю ширину */}
+                  <div style={{ height: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '2px 2px 0 0', overflow: 'hidden' }}>
+                    <div style={{ width: `${company.strength}%`, height: '100%', backgroundColor: barColor }} />
+                  </div>
+                  {/* Шеврон і іконка в рядок — однакова висота */}
                   <div style={{
-                    width: `${company.strength}%`,
-                    height: '100%',
-                    borderRadius: 2,
-                    backgroundColor: barColor,
-                  }} />
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    border: selectedId === company.id ? '1px solid #ffdd00' : '1px solid rgba(0,0,0,0.6)',
+                    borderRadius: '0 0 3px 3px',
+                    overflow: 'hidden',
+                    background: 'rgba(0,0,0,0.35)',
+                  }}>
+                    {BRIGADE_IMAGES[company.brigadeId] && (
+                      <img
+                        src={BRIGADE_IMAGES[company.brigadeId]}
+                        style={{
+                          width: 'auto',
+                          height: iconSize(zoom),
+                          display: 'block',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                    <UnitIcon
+                      type={company.type}
+                      selected={selectedId === company.id}
+                      enemy={isEnemy}
+                      size={iconSize(zoom)}
+                    />
+                  </div>
                 </div>
-                {BRIGADE_IMAGES[company.brigadeId] && (
-                  <img
-                    src={BRIGADE_IMAGES[company.brigadeId]}
-                    style={{
-                      width: iconSize(zoom),
-                      height: iconSize(zoom),
-                      objectFit: 'contain',
-                      display: 'block',
-                      filter: selectedId === company.id ? 'drop-shadow(0 0 3px #ffdd00)' : 'drop-shadow(0 0 2px rgba(0,0,0,0.8))',
-                    }}
-                  />
-                )}
-                <UnitIcon
-                  type={company.type}
-                  selected={selectedId === company.id}
-                  enemy={isEnemy}
-                  size={iconSize(zoom)}
-                />
               </div>
             </Marker>
           )
