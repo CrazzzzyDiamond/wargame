@@ -102,6 +102,135 @@ export function seedScenario(store: Store) {
     },
   ])
 
+  // 92-га ОМБр — звільнення Куп'янська, 10 вересня
+  addBrigadeWithUnits(store, new Brigade({
+    id: '92-ombr',
+    name: '92-га окрема механізована бригада',
+    shortName: '92 ОМБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.UrbanCombat, description: 'Бонус у міській забудові', value: 1.3 },
+    hqPosition: { col: 20, row: 11 },
+  }), [
+    {
+      battalion: new Battalion({ id: '92-1bat', name: '1-й механізований батальйон', type: BattalionType.Mechanized, brigadeId: '92-ombr' }),
+      companies: [
+        new Company({ id: '92-1bat-1co', name: '1-а механізована рота', type: CompanyType.Assault, battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 22, row: 11 } }),
+        new Company({ id: '92-1bat-2co', name: '2-а механізована рота', type: CompanyType.Line,    battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 23, row: 11 } }),
+        new Company({ id: '92-1bat-tnk', name: 'Танкова рота',          type: CompanyType.Tank,    battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 21, row: 11 } }),
+      ],
+    },
+  ])
+
+  // 14-та ОМБр — центральний напрямок
+  addBrigadeWithUnits(store, new Brigade({
+    id: '14-ombr',
+    name: '14-та окрема механізована бригада',
+    shortName: '14 ОМБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.ArmorPenetration, description: 'Підвищена бронепробивність', value: 1.2 },
+    hqPosition: { col: 14, row: 12 },
+  }), [
+    {
+      battalion: new Battalion({ id: '14-1bat', name: '1-й механізований батальйон', type: BattalionType.Mechanized, brigadeId: '14-ombr' }),
+      companies: [
+        new Company({ id: '14-1bat-1co', name: '1-а механізована рота', type: CompanyType.Assault, battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 16, row: 12 } }),
+        new Company({ id: '14-1bat-2co', name: '2-а механізована рота', type: CompanyType.Line,    battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 17, row: 12 } }),
+        new Company({ id: '14-1bat-art', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 14, row: 13 } }),
+      ],
+    },
+  ])
+
+  // 3-тя ОТБр — танковий кулак
+  addBrigadeWithUnits(store, new Brigade({
+    id: '3-otbr',
+    name: '3-тя окрема танкова бригада',
+    shortName: '3 ОТБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.ArmorPenetration, description: 'Важка броня — прорив укріплень', value: 1.4 },
+    hqPosition: { col: 13, row: 10 },
+  }), [
+    {
+      battalion: new Battalion({ id: '3-1bat', name: '1-й танковий батальйон', type: BattalionType.Tank, brigadeId: '3-otbr' }),
+      companies: [
+        new Company({ id: '3-1bat-tnk1', name: '1-а танкова рота', type: CompanyType.Tank,    battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 15, row: 10 } }),
+        new Company({ id: '3-1bat-tnk2', name: '2-а танкова рота', type: CompanyType.Tank,    battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 16, row: 10 } }),
+        new Company({ id: '3-1bat-mech', name: 'Мотопіхотна рота', type: CompanyType.Assault, battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 15, row: 11 } }),
+      ],
+    },
+  ])
+
+  // Кракен — ГУР, спецоперації в Харкові і передмісті
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'kraken',
+    name: 'Кракен (підрозділ ГУР МО України)',
+    shortName: 'Кракен',
+    type: BrigadeType.Special,
+    bonus: { type: BonusType.Stealth, description: 'Невидимість — рейди в тилу противника', value: 1.0 },
+    hqPosition: { col: 7, row: 7 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'kraken-1bat', name: 'Штурмовий загін', type: BattalionType.Special, brigadeId: 'kraken' }),
+      companies: [
+        new Company({ id: 'kraken-spec1', name: 'Група "Кракен" А', type: CompanyType.Special, battalionId: 'kraken-1bat', brigadeId: 'kraken', position: { col: 8, row: 7 } }),
+        new Company({ id: 'kraken-spec2', name: 'Група "Кракен" Б', type: CompanyType.Recon,   battalionId: 'kraken-1bat', brigadeId: 'kraken', position: { col: 9, row: 8 } }),
+      ],
+    },
+  ])
+
+  // ССО — Сили спеціальних операцій
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'sso',
+    name: 'Сили спеціальних операцій ЗСУ',
+    shortName: 'ССО',
+    type: BrigadeType.Special,
+    bonus: { type: BonusType.ReconRange, description: 'Розширений радіус розвідки і наведення', value: 1.5 },
+    hqPosition: { col: 8, row: 14 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'sso-1bat', name: '1-й загін ССО', type: BattalionType.Special, brigadeId: 'sso' }),
+      companies: [
+        new Company({ id: 'sso-spec1', name: 'Загін ССО "Альфа"', type: CompanyType.Special, battalionId: 'sso-1bat', brigadeId: 'sso', position: { col: 9,  row: 14 } }),
+        new Company({ id: 'sso-uav',   name: 'Рота БПЛА ССО',     type: CompanyType.UAV,     battalionId: 'sso-1bat', brigadeId: 'sso', position: { col: 10, row: 14 } }),
+      ],
+    },
+  ])
+
+  // 113-та бригада ТРО — утримання флангів і тилових рубежів
+  addBrigadeWithUnits(store, new Brigade({
+    id: '113-tro',
+    name: '113-та бригада територіальної оборони',
+    shortName: '113 ТРО',
+    type: BrigadeType.TRO,
+    bonus: { type: BonusType.DefenseBonus, description: 'Стійка оборона на укріплених позиціях', value: 1.2 },
+    hqPosition: { col: 9, row: 16 },
+  }), [
+    {
+      battalion: new Battalion({ id: '113-1bat', name: '1-й батальйон ТРО', type: BattalionType.TRO, brigadeId: '113-tro' }),
+      companies: [
+        new Company({ id: '113-1bat-1co', name: '1-а рота ТРО', type: CompanyType.Line, battalionId: '113-1bat', brigadeId: '113-tro', position: { col: 10, row: 16 } }),
+        new Company({ id: '113-1bat-2co', name: '2-а рота ТРО', type: CompanyType.Line, battalionId: '113-1bat', brigadeId: '113-tro', position: { col: 11, row: 16 } }),
+      ],
+    },
+  ])
+
+  // 127-ма бригада ТРО — південний фланг
+  addBrigadeWithUnits(store, new Brigade({
+    id: '127-tro',
+    name: '127-ма бригада територіальної оборони',
+    shortName: '127 ТРО',
+    type: BrigadeType.TRO,
+    bonus: { type: BonusType.DefenseBonus, description: 'Стійка оборона і утримання позицій', value: 1.1 },
+    hqPosition: { col: 13, row: 18 },
+  }), [
+    {
+      battalion: new Battalion({ id: '127-1bat', name: '1-й батальйон ТРО', type: BattalionType.TRO, brigadeId: '127-tro' }),
+      companies: [
+        new Company({ id: '127-1bat-1co', name: '1-а рота ТРО', type: CompanyType.Line, battalionId: '127-1bat', brigadeId: '127-tro', position: { col: 14, row: 18 } }),
+        new Company({ id: '127-1bat-2co', name: '2-а рота ТРО', type: CompanyType.Line, battalionId: '127-1bat', brigadeId: '127-tro', position: { col: 15, row: 18 } }),
+      ],
+    },
+  ])
+
   // Юніти РФ — статична оборона
   const rfBrigade = new Brigade({
     id: 'rf-20-army',
