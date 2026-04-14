@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Marker, useMap } from 'react-map-gl/mapbox'
 import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
@@ -21,6 +21,10 @@ interface AnimatedPos {
 
 // Коефіцієнт інтерполяції за кадр — менше = плавніше і повільніше
 const LERP = 0.08
+
+// Максимальна частота оновлення анімації позицій (не потрібно 60fps для повільних юнітів)
+const ANIM_FPS = 20
+const ANIM_INTERVAL = 1000 / ANIM_FPS
 
 // Розмір іконки залежно від zoom: zoom 7 → 24px, zoom 13 → 64px
 function iconSize(zoom: number): number {
@@ -83,8 +87,15 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
 
   useEffect(() => {
     let frameId: number
+    let lastTime = 0
 
-    const animate = () => {
+    const animate = (timestamp: number) => {
+      frameId = requestAnimationFrame(animate)
+
+      // Throttle: оновлюємо не частіше ніж ANIM_FPS разів/сек
+      if (timestamp - lastTime < ANIM_INTERVAL) return
+      lastTime = timestamp
+
       let moving = false
 
       for (const [id, company] of companies) {
@@ -116,14 +127,14 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
       }
 
       if (moving) setTick(t => t + 1)
-      frameId = requestAnimationFrame(animate)
     }
 
     frameId = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(frameId)
   }, [companies])
 
-  const visibleHexes = buildVisibleHexSet(companies)
+  // Перераховується лише при зміні companies (кожен тік), не при анімаційних ре-рендерах
+  const visibleHexes = useMemo(() => buildVisibleHexSet(companies), [companies])
 
   return (
     <>

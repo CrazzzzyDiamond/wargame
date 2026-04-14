@@ -61,23 +61,30 @@ export function planFormation(
 
   // Фронтові гекси: кільце 0–1 навколо цілі
   const frontHexes = getHexesInRadius(targetHex, 1)
-  const assigned   = new Set<string>()
+  const assigned = new Set<string>()
 
-  const takeHex = (pool: HexPosition[]): HexPosition | null => {
+  // Обираємо найближчий до поточної позиції роти вільний гекс з пулу
+  const takeNearest = (pool: HexPosition[], from: HexPosition): HexPosition | null => {
+    let best: HexPosition | null = null
+    let bestDist = Infinity
     for (const h of pool) {
       const key = `${h.col},${h.row}`
-      if (!assigned.has(key)) { assigned.add(key); return h }
+      if (assigned.has(key)) continue
+      const d = hexDistance(from, h)
+      if (d < bestDist) { bestDist = d; best = h }
     }
-    return null
+    if (best) assigned.add(`${best.col},${best.row}`)
+    return best
   }
 
   const result: CompanyTarget[] = []
 
   for (const company of brigadeCompanies) {
+    if (!company.position) continue
     const isArtillery = company.type === CompanyType.Artillery
     const hex = isArtillery
-      ? (takeHex(rearHexes) ?? takeHex(frontHexes))
-      : (takeHex(frontHexes) ?? takeHex(rearHexes))
+      ? (takeNearest(rearHexes, company.position) ?? takeNearest(frontHexes, company.position))
+      : (takeNearest(frontHexes, company.position) ?? takeNearest(rearHexes, company.position))
     if (!hex) continue
     result.push({ companyId: company.id, targetHex: hex })
   }

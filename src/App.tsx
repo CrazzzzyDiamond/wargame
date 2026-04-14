@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useMemo } from 'react'
 import Map, { Source, Layer } from 'react-map-gl/mapbox'
 import type { MapMouseEvent } from 'react-map-gl/mapbox'
 import type { FeatureCollection } from 'geojson'
@@ -25,11 +25,12 @@ import { UnitPlacer } from './components/UnitPlacer'
 import { Company } from './units/Company'
 import { playUnitSound } from './utils/unitSounds'
 import { CompanyType, Side, TerrainType } from './units/types'
-import { MAP, TERRAIN_COLORS as THEME_TERRAIN_COLORS, DEV, UI } from './config/theme'
+import { MAP, TERRAIN_COLORS, DEV, UI } from './config/theme'
 import type { HexPosition } from './units/Company'
 
 // Інтервал тіку в мілісекундах реального часу
 const TICK_INTERVAL_MS = 500
+
 const TICK_DELTA_SEC    = TICK_INTERVAL_MS / 1000
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
@@ -164,7 +165,8 @@ export default function App() {
   }, [selectedCompanyId, devMode, mapEditor, unitPlacer, hoveredHex])
 
   // GeoJSON усіх гексів із нашими юнітами (зелений)
-  const occupiedHexGeoJSON: FeatureCollection = {
+  // Перераховується лише при зміні companies (кожен тік), не при русі миші
+  const occupiedHexGeoJSON = useMemo((): FeatureCollection => ({
     type: 'FeatureCollection',
     features: Array.from(companies.values())
       .filter(c => c.position)
@@ -176,10 +178,10 @@ export default function App() {
           coordinates: [hexLngLatVertices(c.position!.col, c.position!.row)],
         },
       })),
-  }
+  }), [companies])
 
   // GeoJSON цільових гексів юнітів що рухаються (жовтий — куди йдуть)
-  const movingHexGeoJSON: FeatureCollection = {
+  const movingHexGeoJSON = useMemo((): FeatureCollection => ({
     type: 'FeatureCollection',
     features: Array.from(companies.values())
       .filter(c => c.targetHex && c.side === Side.Ukraine)
@@ -191,45 +193,48 @@ export default function App() {
           coordinates: [hexLngLatVertices(c.targetHex!.col, c.targetHex!.row)],
         },
       })),
-  }
+  }), [companies])
 
   // GeoJSON terrain для dev-режиму (кольорові гекси по типу)
-  const TERRAIN_COLORS: Record<TerrainType, string | null> = {
-    [TerrainType.Open]:   null,
-    [TerrainType.Forest]: THEME_TERRAIN_COLORS.forest,
-    [TerrainType.Urban]:  THEME_TERRAIN_COLORS.urban,
-    [TerrainType.Water]:  THEME_TERRAIN_COLORS.water,
-  }
-  const devTerrainGeoJSON: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: devMode
-      ? Array.from(terrainMap.entries())
-          .filter(([, t]) => t !== TerrainType.Open)
-          .map(([key, t]) => {
-            const [col, row] = key.split(',').map(Number)
-            return {
-              type: 'Feature' as const,
-              properties: { color: TERRAIN_COLORS[t] },
-              geometry: { type: 'Polygon' as const, coordinates: [hexLngLatVertices(col, row)] },
-            }
-          })
-      : [],
-  }
+  const devTerrainGeoJSON = useMemo((): FeatureCollection => {
+    if (!devMode) return { type: 'FeatureCollection', features: [] }
+    const colorByType: Partial<Record<TerrainType, string>> = {
+      [TerrainType.Forest]: TERRAIN_COLORS.forest,
+      [TerrainType.Urban]:  TERRAIN_COLORS.urban,
+      [TerrainType.Water]:  TERRAIN_COLORS.water,
+    }
+    return {
+      type: 'FeatureCollection',
+      features: Array.from(terrainMap.entries())
+        .filter(([, t]) => t !== TerrainType.Open)
+        .map(([key, t]) => {
+          const [col, row] = key.split(',').map(Number)
+          return {
+            type: 'Feature' as const,
+            properties: { color: colorByType[t] ?? '#888' },
+            geometry: { type: 'Polygon' as const, coordinates: [hexLngLatVertices(col, row)] },
+          }
+        }),
+    }
+  }, [terrainMap, devMode])
 
   // GeoJSON підсвіченого гексу (жовтий — hover)
-  const hexHighlightGeoJSON: FeatureCollection = hoveredHex && (selectedCompanyId || (devMode && (mapEditor || unitPlacer)))
-    ? {
-        type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'Polygon',
-            coordinates: [hexLngLatVertices(hoveredHex.col, hoveredHex.row)],
-          },
-        }],
-      }
-    : { type: 'FeatureCollection', features: [] }
+  const hexHighlightGeoJSON = useMemo((): FeatureCollection => {
+    if (!hoveredHex || !(selectedCompanyId || (devMode && (mapEditor || unitPlacer)))) {
+      return { type: 'FeatureCollection', features: [] }
+    }
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [hexLngLatVertices(hoveredHex.col, hoveredHex.row)],
+        },
+      }],
+    }
+  }, [hoveredHex, selectedCompanyId, devMode, mapEditor, unitPlacer])
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', cursor: brigadePlanningMode ? 'crosshair' : 'default' }}>

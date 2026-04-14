@@ -237,9 +237,12 @@ export const useGameStore = create<GameState>((set) => ({
     const attackersOf = new Map<string, string[]>()  // companyId → [attackerId, ...]
 
     const allDeployed = Array.from(companies.values()).filter(c => c.position)
+    // Попередній розподіл по сторонах — вдвічі зменшує кількість порівнянь у ZoC циклі
+    const ukraineSide = allDeployed.filter(c => c.side === Side.Ukraine)
+    const russiaSide  = allDeployed.filter(c => c.side === Side.Russia)
 
     for (const defender of allDeployed) {
-      const enemies = allDeployed.filter(c => c.side !== defender.side && c.position)
+      const enemies = defender.side === Side.Ukraine ? russiaSide : ukraineSide
       const attackers = enemies.filter(enemy => {
         const zoc = getZocRadius(enemy)
         return zoc > 0 && hexDistance(defender.position!, enemy.position!) <= zoc
