@@ -4,11 +4,12 @@ import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { BrigadeType, Side } from '../units/types'
+import { BrigadeType, Side, EntrenchState } from '../units/types'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playSound } from '../utils/sound'
 import { playUnitSound } from '../utils/unitSounds'
 import airSelect from '../sound/air-select.mp3'
+import './UnitIndicators.css'
 
 interface AnimatedPos {
   lng: number
@@ -123,6 +124,28 @@ export function UnitLayer() {
               }}
             >
               <div style={{ cursor: isEnemy ? 'default' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>
+                {/* Індикатори стану над юнітом */}
+                <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {company.inCombat && (
+                    <div className="unit-crosshair">
+                      <div className="unit-crosshair-ring" />
+                    </div>
+                  )}
+                  {!company.inCombat && company.entrenchState === EntrenchState.Entrenched && (
+                    <span className="unit-shield">▣</span>
+                  )}
+                  {!company.inCombat && company.entrenchState === EntrenchState.Entrenching && (
+                    <span className="unit-entrenching">⛏</span>
+                  )}
+                  {!company.inCombat && company.targetHex && (
+                    <div style={{ display: 'flex', gap: 1 }}>
+                      <span className="unit-arrow">▶</span>
+                      <span className="unit-arrow">▶</span>
+                      <span className="unit-arrow">▶</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Полоска strength над іконкою */}
                 <div style={{ width: iconSize(zoom), height: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
                   <div style={{

@@ -21,7 +21,7 @@ import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain } from './utils/terrainAnalysis'
 import { playSound } from './utils/sound'
 import { playUnitSound } from './utils/unitSounds'
-import { BrigadeType, CompanyType } from './units/types'
+import { BrigadeType, CompanyType, Side } from './units/types'
 import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
 
@@ -149,6 +149,21 @@ export default function App() {
       })),
   }
 
+  // GeoJSON цільових гексів юнітів що рухаються (жовтий — куди йдуть)
+  const movingHexGeoJSON: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: Array.from(companies.values())
+      .filter(c => c.targetHex && c.side === Side.Ukraine)
+      .map(c => ({
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [hexLngLatVertices(c.targetHex!.col, c.targetHex!.row)],
+        },
+      })),
+  }
+
   // GeoJSON підсвіченого гексу (жовтий — hover)
   const hexHighlightGeoJSON: FeatureCollection = hoveredHex && selectedCompanyId
     ? {
@@ -224,6 +239,19 @@ export default function App() {
           id="occupied-hex-border"
           type="line"
           paint={{ 'line-color': '#00ff88', 'line-opacity': 0.8, 'line-width': 2 }}
+        />
+      </Source>
+
+      <Source type="geojson" data={movingHexGeoJSON}>
+        <Layer
+          id="moving-hex-fill"
+          type="fill"
+          paint={{ 'fill-color': '#ffdd00', 'fill-opacity': 0.22 }}
+        />
+        <Layer
+          id="moving-hex-border"
+          type="line"
+          paint={{ 'line-color': '#ffdd00', 'line-opacity': 0.95, 'line-width': 2 }}
         />
       </Source>
 
