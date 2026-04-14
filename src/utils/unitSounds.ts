@@ -12,6 +12,10 @@ const ASSAULT_SELECT = Object.values(import.meta.glob('../sound/assault/select/*
 const ASSAULT_MOVE   = Object.values(import.meta.glob('../sound/assault/move/*.mp3',   { eager: true, import: 'default' })) as string[]
 const ASSAULT_ATTACK = Object.values(import.meta.glob('../sound/assault/attack/*.mp3', { eager: true, import: 'default' })) as string[]
 
+const LINE_SELECT = Object.values(import.meta.glob('../sound/line/select/*.mp3', { eager: true, import: 'default' })) as string[]
+const LINE_MOVE   = Object.values(import.meta.glob('../sound/line/move/*.mp3',   { eager: true, import: 'default' })) as string[]
+const LINE_ATTACK = Object.values(import.meta.glob('../sound/line/attack/*.mp3', { eager: true, import: 'default' })) as string[]
+
 // Таблиця звуків по типу юніта і події
 const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
   [CompanyType.Special]: {
@@ -23,6 +27,11 @@ const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
     select: ASSAULT_SELECT,
     move:   ASSAULT_MOVE,
     attack: ASSAULT_ATTACK,
+  },
+  [CompanyType.Line]: {
+    select: LINE_SELECT,
+    move:   LINE_MOVE,
+    attack: LINE_ATTACK,
   },
 }
 
