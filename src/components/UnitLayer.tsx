@@ -4,13 +4,17 @@ import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { BrigadeType, Side, EntrenchState } from '../units/types'
+import { BrigadeType, CompanyType, Side, EntrenchState } from '../units/types'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playSound } from '../utils/sound'
 import { playUnitSound } from '../utils/unitSounds'
 import airSelect from '../sound/air-select.mp3'
+import battleGun from '../sound/events/battle_gun.wav'
 import './UnitIndicators.css'
 import { SIDE_COLORS, ACCENT, UI, DEV } from '../config/theme'
+
+// Піхотні типи що генерують звук бою
+const INFANTRY_TYPES = new Set([CompanyType.Line, CompanyType.Assault])
 
 interface AnimatedPos {
   lng: number
@@ -36,6 +40,20 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
   const { current: map } = useMap()
   const [zoom, setZoom] = useState(() => map?.getZoom() ?? 9)
 
+  // Поточні анімовані позиції — не в стейті, бо оновлюємо кожен кадр через ref
+  const animPos = useRef<Map<string, AnimatedPos>>(new Map())
+
+  // Аудіо об'єкт звуку бою — зберігаємо щоб зупинити коли бій закінчиться
+  const battleAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Зупиняємо звук бою при розмонтуванні компонента
+  useEffect(() => {
+    return () => {
+      battleAudioRef.current?.pause()
+      battleAudioRef.current = null
+    }
+  }, [])
+
   useEffect(() => {
     if (!map) return
     const onZoom = () => setZoom(map.getZoom())
@@ -43,8 +61,25 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
     return () => { map.off('zoom', onZoom) }
   }, [map])
 
-  // Поточні анімовані позиції — не в стейті, бо оновлюємо кожен кадр через ref
-  const animPos = useRef<Map<string, AnimatedPos>>(new Map())
+  useEffect(() => {
+    const anyInfantryInFight = Array.from(companies.values()).some(c =>
+      INFANTRY_TYPES.has(c.type) && (c.inCombat || c.isSuppressed)
+    )
+
+    if (anyInfantryInFight && !battleAudioRef.current) {
+      // Починаємо бій — запускаємо звук циклічно
+      const audio = new Audio(battleGun)
+      audio.volume = 0.6
+      audio.loop   = true
+      audio.play().catch(() => {})
+      battleAudioRef.current = audio
+    } else if (!anyInfantryInFight && battleAudioRef.current) {
+      // Бій закінчився — зупиняємо
+      battleAudioRef.current.pause()
+      battleAudioRef.current.currentTime = 0
+      battleAudioRef.current = null
+    }
+  }, [companies])
 
   // Лічильник для примусового ре-рендеру під час анімації
   const [, setTick] = useState(0)
@@ -125,7 +160,7 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                 selectCompany(isAlreadySelected ? null : company.id)
               }}
             >
-              <div style={{ cursor: isEnemy ? 'default' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', position: 'relative' }}>
+              <div style={{ cursor: isEnemy ? (selectedId ? 'crosshair' : 'default') : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', position: 'relative' }}>
                 {/* Кнопка видалення в dev-режимі */}
                 {devMode && (
                   <div
@@ -154,6 +189,9 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                     <div className="unit-crosshair">
                       <div className="unit-crosshair-ring" />
                     </div>
+                  )}
+                  {!company.inCombat && company.isSuppressed && (
+                    <span className="unit-suppressed">!</span>
                   )}
                   {!company.inCombat && company.entrenchState === EntrenchState.Entrenched && (
                     <span className="unit-shield">▣</span>

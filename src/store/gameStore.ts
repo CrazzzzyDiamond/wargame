@@ -56,6 +56,9 @@ export interface GameState {
   startEntrench: (companyId: string) => void
   leaveEntrench: (companyId: string) => void
 
+  // Дії — штурм (явний наказ атаки на ворожу роту)
+  setAssaultTarget: (companyId: string, targetId: string | null) => void
+
   // Дії — артилерійський вогонь
   setAttackTarget: (companyId: string, hex: HexPosition | null) => void
 
@@ -142,6 +145,19 @@ export const useGameStore = create<GameState>((set) => ({
     return { companies }
   }),
 
+  setAssaultTarget: (companyId, targetId) => set((state) => {
+    const companies = new Map(state.companies)
+    const company = companies.get(companyId)
+    if (!company || company.type === CompanyType.Artillery) return {}
+    company.assaultTargetId = targetId
+    // Рухаємось до цілі штурму
+    if (targetId) {
+      const target = companies.get(targetId)
+      if (target?.position) company.targetHex = target.position
+    }
+    return { companies }
+  }),
+
   setAttackTarget: (companyId, hex) => set((state) => {
     const companies = new Map(state.companies)
     const company = companies.get(companyId)
@@ -212,54 +228,69 @@ export const useGameStore = create<GameState>((set) => ({
       attackersOf.set(defender.id, attackers.map(a => a.id))
     }
 
-    // Скидаємо інCombat і isRetreating, потім виставляємо заново
+    // Скидаємо бойові стани, потім виставляємо заново
     for (const company of companies.values()) {
-      company.inCombat = false
+      company.inCombat    = false
+      company.isSuppressed = false
       if (!company.targetHex) company.isRetreating = false
+      // Скидаємо assaultTargetId якщо ціль знищена
+      if (company.assaultTargetId && !companies.has(company.assaultTargetId)) {
+        company.assaultTargetId = null
+      }
     }
 
     // Накопичуємо дамаг окремо, щоб застосувати після всіх розрахунків
-    const pendingDamage      = new Map<string, number>()
+    const pendingDamage       = new Map<string, number>()
     const pendingMoraleDamage = new Map<string, number>()
+
+    // Множник дамагу: штурм = 1.0, придушення = 0.35
+    const SUPPRESSION_MULT = 0.35
 
     for (const [defenderId, attackerIds] of attackersOf) {
       if (attackerIds.length === 0) continue
 
       const defender = companies.get(defenderId)!
-
-      // ССО і танки не зупиняються ZoC — рухаються навіть у бою
       const isMobile = defender.type === CompanyType.Special || defender.type === CompanyType.Tank
-      if (!isMobile) defender.inCombat = true
-
-      // Відступ під вогнем: не-мобільна піхота у бою з наказом руху
-      if (!isMobile && defender.targetHex && defender.side === Side.Ukraine) {
-        defender.isRetreating = true
-      }
-
-      // Дамаг по захиснику від кожного атакуючого
       const defTerrain = getTerrain(state.terrainMap, defender.position!.col, defender.position!.row)
+
       for (const attackerId of attackerIds) {
         const attacker = companies.get(attackerId)!
         const atkTerrain = getTerrain(state.terrainMap, attacker.position!.col, attacker.position!.row)
-        const dmg = calcDamage(defTerrain, defender.entrenchState, attackerIds.length, attacker.type, defender.type, defender.isRetreating, atkTerrain, attacker.morale, defender.morale)
+
+        // Штурм якщо атакуючий має явний наказ на цього захисника
+        const isAssault = attacker.assaultTargetId === defenderId
+        const damageMult = isAssault ? 1.0 : SUPPRESSION_MULT
+
+        // Виставляємо стан
+        if (isAssault) {
+          attacker.inCombat = true
+          if (!isMobile) defender.inCombat = true
+        } else {
+          attacker.isSuppressed = true
+          if (!isMobile) defender.isSuppressed = true
+        }
+
+        // Відступ під вогнем при штурмі (не при придушенні)
+        if (isAssault && !isMobile && defender.targetHex && defender.side === Side.Ukraine) {
+          defender.isRetreating = true
+        }
+
+        // Дамаг по захиснику
+        const dmg = calcDamage(defTerrain, defender.entrenchState, attackerIds.length, attacker.type, defender.type, defender.isRetreating, atkTerrain, attacker.morale, defender.morale) * damageMult
         pendingDamage.set(defenderId, (pendingDamage.get(defenderId) ?? 0) + dmg)
 
         // Артилерія б'є по morale окопаної піхоти незалежно від укриття
         if (attacker.type === CompanyType.Artillery &&
             defender.type === CompanyType.Line &&
             defender.entrenchState === EntrenchState.Entrenched) {
-          pendingMoraleDamage.set(defenderId, (pendingMoraleDamage.get(defenderId) ?? 0) + ARTILLERY_MORALE_DAMAGE)
+          pendingMoraleDamage.set(defenderId, (pendingMoraleDamage.get(defenderId) ?? 0) + ARTILLERY_MORALE_DAMAGE * damageMult)
         }
-      }
 
-      // Відповідний вогонь: захисник б'є по кожному атакуючому
-      for (const attackerId of attackerIds) {
-        const attacker = companies.get(attackerId)!
-        attacker.inCombat = true
-        const atkTerrain = getTerrain(state.terrainMap, attacker.position!.col, attacker.position!.row)
+        // Відповідний вогонь захисника
         const counterCount = (attackersOf.get(attackerId) ?? []).length || 1
-        const dmg = calcDamage(atkTerrain, attacker.entrenchState, counterCount, defender.type, attacker.type, attacker.isRetreating, defTerrain, defender.morale, attacker.morale)
-        pendingDamage.set(attackerId, (pendingDamage.get(attackerId) ?? 0) + dmg)
+        // Захисник у штурмовому бою б'є на повну; при придушенні — теж зменшено
+        const counterDmg = calcDamage(atkTerrain, attacker.entrenchState, counterCount, defender.type, attacker.type, attacker.isRetreating, defTerrain, defender.morale, attacker.morale) * damageMult
+        pendingDamage.set(attackerId, (pendingDamage.get(attackerId) ?? 0) + counterDmg)
       }
     }
 

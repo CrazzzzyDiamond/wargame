@@ -22,8 +22,10 @@ export class Company {
   strength: number              // чисельність роти 0–100, витрачається в бою
   entrenchState: EntrenchState  // стан окопування (тільки для Line)
   entrenchMinutesLeft: number   // залишок ігрових хвилин до зміни стану
-  inCombat: boolean             // юніт у бойовому контакті цього тіку
+  inCombat: boolean             // активний штурм (явний наказ гравця)
+  isSuppressed: boolean         // під вогнем придушення (в ZoC без наказу штурму)
   isRetreating: boolean         // відступає під вогнем — штраф до швидкості і захисту
+  assaultTargetId: string | null       // ціль штурму (id ворожої роти)
   attackTargetHex: HexPosition | null  // призначена ціль для артилерійського вогню
   attackCooldownMinutes: number        // залишок хвилин до наступного пострілу
 
@@ -52,7 +54,9 @@ export class Company {
     this.entrenchState = EntrenchState.None
     this.entrenchMinutesLeft = 0
     this.inCombat = false
+    this.isSuppressed = false
     this.isRetreating = false
+    this.assaultTargetId = null
     this.attackTargetHex = null
     this.attackCooldownMinutes = 0
   }

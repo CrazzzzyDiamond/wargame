@@ -58,7 +58,7 @@ const maskGeoJSON: FeatureCollection = {
 }
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, terrainMap } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, setAssaultTarget, terrainMap } = useGameStore()
 
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
   const [devMode, setDevMode] = useState(false)
@@ -144,20 +144,24 @@ export default function App() {
     const brigade = brigades.get(company?.brigadeId ?? '')
     const hex = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
 
-    const hasEnemy = Array.from(companies.values()).some(c =>
+    const enemyOnHex = Array.from(companies.values()).find(c =>
       c.side !== company?.side && c.position?.col === hex.col && c.position?.row === hex.row
     )
 
-    if (company?.type === CompanyType.Artillery && hasEnemy) {
+    if (company?.type === CompanyType.Artillery && enemyOnHex) {
       // Артилерія + ворог на гексі → встановити ціль атаки
       setAttackTarget(selectedCompanyId, hex)
+    } else if (enemyOnHex && company?.type !== CompanyType.Artillery) {
+      // Піхота/танк + ворог на гексі → наказ штурму
+      setAssaultTarget(selectedCompanyId, enemyOnHex.id)
     } else {
-      // Всі інші випадки → рух
+      // Порожній гекс → рух, скасовуємо штурм
+      setAssaultTarget(selectedCompanyId, null)
       const played = playUnitSound(company!.type, 'move')
       if (!played && brigade?.type === BrigadeType.DSV) playSound(airMove)
       moveCompany(selectedCompanyId, hex)
     }
-  }, [selectedCompanyId, moveCompany])
+  }, [selectedCompanyId, moveCompany, setAssaultTarget])
 
   // Рух миші — підсвічуємо гекс під курсором (dev-режим або вибраний юніт)
   const handleMouseMove = useCallback((e: MapMouseEvent) => {
