@@ -18,6 +18,7 @@ import { seedScenario } from './units/seed'
 import { INITIAL_VIEW, MAP_BOUNDS } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain, saveTerrainCache } from './utils/terrainAnalysis'
+import { BrigadePanel } from './components/BrigadePanel'
 import { TerrainEditor } from './components/TerrainEditor'
 import { UnitPlacer } from './components/UnitPlacer'
 import { Company } from './units/Company'
@@ -38,6 +39,7 @@ export default function App() {
   const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, setAssaultTarget, terrainMap } = useGameStore()
 
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
+  const [selectedBrigadeId, setSelectedBrigadeId] = useState<string | null>(null)
   const [devMode, setDevMode] = useState(false)
   const [mapEditor, setMapEditor] = useState(false)
   const [unitPlacer, setUnitPlacer] = useState(false)
@@ -110,7 +112,8 @@ export default function App() {
       return
     }
     if (selectedCompanyId) selectCompany(null)
-  }, [devMode, mapEditor, unitPlacer, editTerrain, placeSide, placeType, placeBrigadeId, selectedCompanyId, selectCompany, setHexTerrain, addCompany])
+    if (selectedBrigadeId) setSelectedBrigadeId(null)
+  }, [devMode, mapEditor, unitPlacer, editTerrain, placeSide, placeType, placeBrigadeId, selectedCompanyId, selectedBrigadeId, selectCompany, setHexTerrain, addCompany])
 
   // Правий клік — перемістити вибраний юніт
   const handleMapRightClick = useCallback((e: MapMouseEvent) => {
@@ -398,6 +401,7 @@ export default function App() {
         onBrigadeChange={setPlaceBrigadeId}
       />
     )}
+    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={setSelectedBrigadeId} dimmed={!!selectedCompanyId} />
     <TimeControls />
     <UnitPanel />
     <DirectiveMenu />

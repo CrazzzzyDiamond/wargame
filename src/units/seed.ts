@@ -237,6 +237,7 @@ export function seedScenario(store: Store) {
     name: '20-та загальновійськова армія РФ',
     shortName: '20 ЗВА РФ',
     type: BrigadeType.Ground,
+    side: Side.Russia,
     bonus: { type: BonusType.DefenseBonus, description: 'Підготовлена оборона', value: 1.2 },
     hqPosition: { col: 14, row: 11 },
   })
