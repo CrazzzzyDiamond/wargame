@@ -56,6 +56,7 @@ const maskGeoJSON: FeatureCollection = {
 export default function App() {
   const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, moveCompany, selectCompany, tick, setTerrainMap, setZoom, setAttackTarget } = useGameStore()
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
+  const [devMode, setDevMode] = useState(false)
 
   useEffect(() => {
     seedScenario({ addBrigade, addBattalion, addCompany })
@@ -256,12 +257,32 @@ export default function App() {
 
       <TerrainLayer />
       <ZocLayer />
-      <FogLayer />
+      <FogLayer disabled={devMode} />
       <ArtilleryRangeLayer />
       <MovementLayer />
 
       <UnitLayer />
     </Map>
+    <button
+      onClick={() => setDevMode(v => !v)}
+      style={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        padding: '4px 10px',
+        background: devMode ? '#e74c3c' : 'rgba(0,0,0,0.6)',
+        color: devMode ? '#fff' : '#aaa',
+        border: `1px solid ${devMode ? '#e74c3c' : '#555'}`,
+        borderRadius: 4,
+        fontSize: 11,
+        cursor: 'pointer',
+        zIndex: 100,
+        fontFamily: 'monospace',
+        letterSpacing: '0.05em',
+      }}
+    >
+      {devMode ? 'DEV ON' : 'DEV'}
+    </button>
     <TimeControls />
     <UnitPanel />
     <DirectiveMenu />

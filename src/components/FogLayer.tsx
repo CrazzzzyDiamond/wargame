@@ -10,7 +10,11 @@ const ZONE_RING: [number, number][] = [
   [36.3, 50.1], [38.3, 50.1], [38.3, 49.0], [36.3, 49.0], [36.3, 50.1],
 ]
 
-export function FogLayer() {
+interface Props {
+  disabled?: boolean
+}
+
+export function FogLayer({ disabled = false }: Props) {
   const companies = useGameStore(s => s.companies)
 
   // Будуємо GeoJSON полігон туману: зона операції з "дірками" у видимих гексах
@@ -38,6 +42,8 @@ export function FogLayer() {
       }],
     }
   }, [companies])
+
+  if (disabled) return null
 
   return (
     <Source type="geojson" data={fogGeoJSON}>
