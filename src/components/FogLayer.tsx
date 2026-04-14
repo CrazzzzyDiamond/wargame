@@ -6,9 +6,10 @@ import { hexLngLatVertices } from '../utils/hexUtils'
 import { buildVisibleHexSet } from '../utils/visibility'
 import { MAP } from '../config/theme'
 
-// Зовнішній контур туману — весь світ, щоб туман виглядав однаково скрізь
+// Зовнішній контур туману — великий прямокутник навколо регіону
+// Не використовуємо ±180 бо Mapbox дає артефакти на антимеридіані
 const WORLD_RING: [number, number][] = [
-  [-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90],
+  [20, 40], [55, 40], [55, 58], [20, 58], [20, 40],
 ]
 
 interface Props {
