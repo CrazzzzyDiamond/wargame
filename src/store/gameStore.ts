@@ -420,6 +420,27 @@ export const useGameStore = create<GameState>((set) => ({
       // ССО і танки рухаються навіть у бою; решта — блокується
       const isMobileUnit = company.type === CompanyType.Special || company.type === CompanyType.Tank
       if (!isMobileUnit && company.inCombat) continue
+
+      // Зупинка при ZoC контакті залежно від директиви бригади
+      if (company.isSuppressed && company.targetHex && !isMobileUnit) {
+        const directive = state.brigadeDirectives.get(company.brigadeId)
+
+        if (directive === Directive.AllOut) {
+          // Автоштурм — знаходимо найближчого ворога в ZoC і атакуємо
+          const blockers = Array.from(companies.values()).filter(e => {
+            if (e.side === company.side || !e.position || !company.position) return false
+            return hexDistance(company.position, e.position) <= getZocRadius(e)
+          })
+          if (blockers.length > 0) {
+            company.assaultTargetId = blockers[0].id
+            company.targetHex = blockers[0].position
+          }
+        } else {
+          // Cautious і Advance — зупиняємось, чекаємо
+          company.targetHex = null
+        }
+        continue
+      }
       // Окопана лінійна піхота не рухається навіть при Panic
       if (company.type === CompanyType.Line &&
           company.entrenchState === EntrenchState.Entrenched &&

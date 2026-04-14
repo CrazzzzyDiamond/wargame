@@ -36,7 +36,7 @@ export function getAttackRange(type: CompanyType): AttackRange | null {
 export function getCompanyStatus(company: Company, directive: Directive | undefined): UnitStatus {
   if (company.inCombat)  return UnitStatus.Combat
   if (company.targetHex) return UnitStatus.Marching
-  if (directive === Directive.Hold) return UnitStatus.Holding
+  if (directive === Directive.Cautious && !company.targetHex) return UnitStatus.Holding
   return UnitStatus.Idle
 }
 

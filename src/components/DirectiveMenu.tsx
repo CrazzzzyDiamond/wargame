@@ -4,9 +4,9 @@ import { BRIGADE_IMAGES } from '../assets/brigadeImages'
 import { ACCENT, UI, DIRECTIVE_COLORS } from '../config/theme'
 
 const DIRECTIVES: { value: Directive; label: string; description: string; color: string }[] = [
-  { value: Directive.Advance, label: 'Наступ',      description: '+атака, readiness витрачається швидше', color: DIRECTIVE_COLORS.advance },
-  { value: Directive.Hold,    label: 'Утримувати',  description: '+оборона, заборона руху',               color: DIRECTIVE_COLORS.hold },
-  { value: Directive.Rest,    label: 'Відпочинок',  description: 'Відновлення readiness і morale',         color: DIRECTIVE_COLORS.rest },
+  { value: Directive.Cautious, label: 'Обережно',          description: 'Зупинка при контакті, чекає наказу',      color: DIRECTIVE_COLORS.cautious },
+  { value: Directive.Advance,  label: 'Наступ',            description: 'Зупинка при контакті, арта б\'є сама',    color: DIRECTIVE_COLORS.advance },
+  { value: Directive.AllOut,   label: 'Будь-якою ціною',   description: 'Автоштурм при зустрічі з ворогом',        color: DIRECTIVE_COLORS.allout },
 ]
 
 export function DirectiveMenu() {

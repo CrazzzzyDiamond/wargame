@@ -49,6 +49,49 @@ export function seedScenario(store: Store) {
     },
   ])
 
+  // 95-та ОДШБр — північніше, фланговий маневр
+  addBrigadeWithUnits(store, new Brigade({
+    id: '95-odshbr',
+    name: '95-та окрема десантно-штурмова бригада',
+    shortName: '95 ОДШБр',
+    type: BrigadeType.DSV,
+    bonus: { type: BonusType.AssaultSpeed, description: 'Прискорене переміщення по пересіченій місцевості', value: 1.3 },
+    hqPosition: { col: 10, row: 8 },
+  }), [
+    {
+      battalion: new Battalion({ id: '95-1bat', name: '1-й штурмовий батальйон', type: BattalionType.Assault, brigadeId: '95-odshbr' }),
+      companies: [
+        new Company({ id: '95-1bat-1co',  name: '1-а штурмова рота', type: CompanyType.Assault,   battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 12, row: 8  } }),
+        new Company({ id: '95-1bat-2co',  name: '2-а штурмова рота', type: CompanyType.Assault,   battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 13, row: 8  } }),
+        new Company({ id: '95-1bat-rec',  name: 'Розвідувальна рота', type: CompanyType.Recon,    battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 12, row: 9  } }),
+        new Company({ id: '95-1bat-uav',  name: 'Рота БПЛА',          type: CompanyType.UAV,      battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 11, row: 8  } }),
+        new Company({ id: '95-1bat-tnk',  name: 'Танкова рота',       type: CompanyType.Tank,     battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 11, row: 9  } }),
+        new Company({ id: '95-1bat-art',  name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '95-1bat', brigadeId: '95-odshbr', position: { col: 10, row: 9  } }),
+      ],
+    },
+  ])
+
+  // 92-га ОМБр — звільнення Куп'янська
+  addBrigadeWithUnits(store, new Brigade({
+    id: '92-ombr',
+    name: '92-га окрема механізована бригада',
+    shortName: '92 ОМБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.UrbanCombat, description: 'Бонус у міській забудові', value: 1.3 },
+    hqPosition: { col: 14, row: 14 },
+  }), [
+    {
+      battalion: new Battalion({ id: '92-1bat', name: '1-й механізований батальйон', type: BattalionType.Mechanized, brigadeId: '92-ombr' }),
+      companies: [
+        new Company({ id: '92-1bat-1co', name: '1-а механізована рота', type: CompanyType.Assault,   battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 16, row: 14 } }),
+        new Company({ id: '92-1bat-2co', name: '2-а механізована рота', type: CompanyType.Line,      battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 17, row: 14 } }),
+        new Company({ id: '92-1bat-tnk', name: 'Танкова рота',          type: CompanyType.Tank,      battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 16, row: 15 } }),
+        new Company({ id: '92-1bat-rec', name: 'Розвідувальна рота',    type: CompanyType.Recon,     battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 17, row: 15 } }),
+        new Company({ id: '92-1bat-art', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '92-1bat', brigadeId: '92-ombr', position: { col: 14, row: 15 } }),
+      ],
+    },
+  ])
+
   // Юніти РФ — статична оборона
   const rfBrigade = new Brigade({
     id: 'rf-20-army',

@@ -109,7 +109,7 @@ export const DEV = {
 
 // --- Директиви бригад ---
 export const DIRECTIVE_COLORS = {
-  advance: '#e74c3c',
-  hold:    '#3498db',
-  rest:    '#2ecc71',
+  cautious: '#3498db',   // синій — обережність
+  advance:  '#f39c12',   // помаранчевий — наступ
+  allout:   '#e74c3c',   // червоний — будь-якою ціною
 }

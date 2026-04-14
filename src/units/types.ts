@@ -56,9 +56,9 @@ export enum Readiness {
 }
 
 export enum Directive {
-  Advance  = 'advance',   // наступ — +атака, readiness витрачається швидше
-  Hold     = 'hold',      // утримувати — +оборона, заборона руху
-  Rest     = 'rest',      // відпочинок — відновлення readiness і morale
+  Cautious = 'cautious',  // обережно — зупинка при контакті, чекає наказу гравця
+  Advance  = 'advance',   // наступ — зупинка при контакті, арта б'є автоматично
+  AllOut   = 'allout',    // будь-якою ціною — автоштурм при контакті з ворогом
 }
 
 export enum Morale {
