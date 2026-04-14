@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 .env.local
+
+# macOS
+.DS_Store
+**/.DS_Store
