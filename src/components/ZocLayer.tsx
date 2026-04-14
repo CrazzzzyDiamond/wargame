@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore'
 import { getHexesInRadius } from '../utils/hexUtils'
 import { hexLngLatVertices } from '../utils/hexUtils'
 import { getZocRadius } from '../utils/unitStatus'
+import { MAP } from '../config/theme'
 
 export function ZocLayer() {
   const companies  = useGameStore(s => s.companies)
@@ -43,7 +44,7 @@ export function ZocLayer() {
         id="zoc-fill"
         type="fill"
         paint={{
-          'fill-color': '#ff8c00',
+          'fill-color': MAP.zoc,
           'fill-opacity': 0.12,
         }}
       />
@@ -51,7 +52,7 @@ export function ZocLayer() {
         id="zoc-line"
         type="line"
         paint={{
-          'line-color': '#ff8c00',
+          'line-color': MAP.zoc,
           'line-opacity': 0.5,
           'line-width': 1,
         }}

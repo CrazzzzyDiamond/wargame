@@ -3,6 +3,7 @@ import { Source, Layer } from 'react-map-gl/mapbox'
 import type { FeatureCollection, LineString, Point } from 'geojson'
 import { useGameStore } from '../store/gameStore'
 import { hexToLngLat } from '../utils/hexUtils'
+import { MAP } from '../config/theme'
 
 export function MovementLayer() {
   const companies = useGameStore(s => s.companies)
@@ -41,7 +42,7 @@ export function MovementLayer() {
           id="movement-lines"
           type="line"
           paint={{
-            'line-color': '#ffdd00',
+            'line-color': MAP.hexMoving,
             'line-opacity': 0.55,
             'line-width': 1.5,
             'line-dasharray': [4, 3],
@@ -56,7 +57,7 @@ export function MovementLayer() {
           paint={{
             'circle-radius': 5,
             'circle-color': 'transparent',
-            'circle-stroke-color': '#ffdd00',
+            'circle-stroke-color': MAP.hexMoving,
             'circle-stroke-width': 2,
             'circle-opacity': 0,
             'circle-stroke-opacity': 0.8,
@@ -71,7 +72,7 @@ export function MovementLayer() {
           paint={{
             'circle-radius': 10,
             'circle-color': 'transparent',
-            'circle-stroke-color': '#e74c3c',
+            'circle-stroke-color': MAP.artilleryRange,
             'circle-stroke-width': 2,
             'circle-stroke-opacity': 0.9,
           }}
@@ -81,7 +82,7 @@ export function MovementLayer() {
           type="circle"
           paint={{
             'circle-radius': 3,
-            'circle-color': '#e74c3c',
+            'circle-color': MAP.artilleryRange,
             'circle-opacity': 0.9,
           }}
         />

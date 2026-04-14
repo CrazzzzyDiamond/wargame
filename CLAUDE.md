@@ -31,6 +31,26 @@
 - Не додавай зайвої абстракції — тільки те що потрібно зараз
 - Не додавай `console.log` без потреби
 
+## Кольори і тема
+
+Всі кольори визначені в **`src/config/theme.ts`** — не використовуй hardcoded hex/rgba в компонентах.
+
+| Експорт | Призначення |
+|---|---|
+| `SIDE_COLORS` | Кольори сторін (ukraine, russia) |
+| `ACCENT` | Жовтий (#ffdd00), блакитний (#00cfff) та їх варіанти з opacity |
+| `TERRAIN_COLORS` | Кольори ландшафту для редактора і статусу |
+| `STATUS_COLORS` | Статус юніта (marching, holding, idle, combat) |
+| `READINESS_COLORS` | Боєздатність (ready, strained, exhausted) |
+| `MORALE_COLORS` | Мораль (high, steady, shaken, panic) |
+| `ENTRENCH_COLORS` | Окопування (amber, shield, фони і рамки) |
+| `UI` | Фони панелей, текст, розділювачі, opacity-варіанти |
+| `MAP` | Кольори шарів Mapbox (hexGrid, fog, zoc, тощо) |
+| `DEV` | Кольори кнопок dev-режиму |
+| `DIRECTIVE_COLORS` | Кольори директив бригад |
+
+CSS-файли використовують `var(--color-*)` з `:root` в `UnitIndicators.css`.
+
 ## Контекст проєкту
 
 Браузерна стратегія про Харківський контрнаступ ЗСУ (вересень 2022).

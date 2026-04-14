@@ -10,6 +10,7 @@ import { playSound } from '../utils/sound'
 import { playUnitSound } from '../utils/unitSounds'
 import airSelect from '../sound/air-select.mp3'
 import './UnitIndicators.css'
+import { SIDE_COLORS, ACCENT, UI, DEV } from '../config/theme'
 
 interface AnimatedPos {
   lng: number
@@ -102,7 +103,7 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
           if (!pos) return null
 
           const isEnemy = company.side === Side.Russia
-          const barColor = isEnemy ? '#e74c3c' : '#4caf50'
+          const barColor = isEnemy ? SIDE_COLORS.russia : SIDE_COLORS.ukraine
 
           return (
             <Marker
@@ -135,8 +136,8 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                       right: -6,
                       width: 14,
                       height: 14,
-                      background: '#e74c3c',
-                      color: '#fff',
+                      background: DEV.deleteBtn,
+                      color: UI.white,
                       borderRadius: '50%',
                       fontSize: 10,
                       lineHeight: '14px',
@@ -180,7 +181,7 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    border: selectedId === company.id ? '1px solid #ffdd00' : '1px solid rgba(0,0,0,0.6)',
+                    border: selectedId === company.id ? `1px solid ${ACCENT.yellow}` : `1px solid ${UI.borderDark}`,
                     borderRadius: '0 0 3px 3px',
                     overflow: 'hidden',
                     background: 'rgba(0,0,0,0.35)',

@@ -4,6 +4,7 @@ import type { FeatureCollection, Polygon } from 'geojson'
 import { useGameStore } from '../store/gameStore'
 import { getHexesInRing, hexLngLatVertices } from '../utils/hexUtils'
 import { getAttackRange } from '../utils/unitStatus'
+import { MAP } from '../config/theme'
 
 export function ArtilleryRangeLayer() {
   const companies  = useGameStore(s => s.companies)
@@ -41,7 +42,7 @@ export function ArtilleryRangeLayer() {
         id="artillery-range-fill"
         type="fill"
         paint={{
-          'fill-color': '#e74c3c',
+          'fill-color': MAP.artilleryRange,
           'fill-opacity': 0.15,
         }}
       />
@@ -49,7 +50,7 @@ export function ArtilleryRangeLayer() {
         id="artillery-range-line"
         type="line"
         paint={{
-          'line-color': '#e74c3c',
+          'line-color': MAP.artilleryRange,
           'line-opacity': 0.45,
           'line-width': 1,
         }}

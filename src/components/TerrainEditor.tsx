@@ -1,4 +1,5 @@
 import { TerrainType } from '../units/types'
+import { TERRAIN_COLORS, UI } from '../config/theme'
 
 interface Props {
   selected: TerrainType
@@ -6,10 +7,10 @@ interface Props {
 }
 
 const TERRAIN_OPTIONS: { type: TerrainType; label: string; color: string }[] = [
-  { type: TerrainType.Open,   label: 'Поле',    color: '#8bc34a' },
-  { type: TerrainType.Forest, label: 'Ліс',     color: '#2e7d32' },
-  { type: TerrainType.Urban,  label: 'Місто',   color: '#90a4ae' },
-  { type: TerrainType.Water,  label: 'Вода',    color: '#1e88e5' },
+  { type: TerrainType.Open,   label: 'Поле',    color: TERRAIN_COLORS.open },
+  { type: TerrainType.Forest, label: 'Ліс',     color: TERRAIN_COLORS.forest },
+  { type: TerrainType.Urban,  label: 'Місто',   color: TERRAIN_COLORS.urban },
+  { type: TerrainType.Water,  label: 'Вода',    color: TERRAIN_COLORS.water },
 ]
 
 export function TerrainEditor({ selected, onChange }: Props) {
@@ -29,9 +30,9 @@ export function TerrainEditor({ selected, onChange }: Props) {
           onClick={() => onChange(type)}
           style={{
             padding: '4px 10px',
-            background: selected === type ? color : 'rgba(0,0,0,0.6)',
-            color: '#fff',
-            border: `1px solid ${selected === type ? color : '#555'}`,
+            background: selected === type ? color : UI.black60,
+            color: UI.white,
+            border: `1px solid ${selected === type ? color : UI.borderMuted}`,
             borderRadius: 4,
             fontSize: 11,
             cursor: 'pointer',

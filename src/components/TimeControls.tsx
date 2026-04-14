@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import type { GameSpeed } from '../store/gameStore'
 import { OPERATION_START } from '../config/mapConfig'
+import { ACCENT, UI } from '../config/theme'
 
 const OPERATION_START_EPOCH = new Date(OPERATION_START).getTime()
 
@@ -34,8 +35,8 @@ export function TimeControls() {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: 'rgba(10, 14, 20, 0.88)',
-      border: '1px solid rgba(255, 221, 0, 0.35)',
+      backgroundColor: UI.bgDark,
+      border: `1px solid ${ACCENT.yellowDim}`,
       borderRadius: 6,
       padding: '6px 14px',
       fontFamily: 'monospace',
@@ -43,11 +44,11 @@ export function TimeControls() {
     }}>
 
       {/* Дата і час операції */}
-      <div style={{ color: '#ffdd00', fontSize: 14, fontWeight: 'bold', minWidth: 100, textAlign: 'center' }}>
+      <div style={{ color: ACCENT.yellow, fontSize: 14, fontWeight: 'bold', minWidth: 100, textAlign: 'center' }}>
         {formatGameTime(elapsedSeconds)}
       </div>
 
-      <div style={{ width: 1, height: 18, backgroundColor: 'rgba(255,221,0,0.25)' }} />
+      <div style={{ width: 1, height: 18, backgroundColor: ACCENT.yellowGlow }} />
 
       {/* Кнопки швидкості */}
       {BUTTONS.map(btn => {
@@ -57,10 +58,10 @@ export function TimeControls() {
             key={btn.value}
             onClick={() => setSpeed(btn.value)}
             style={{
-              background: isActive ? 'rgba(255,221,0,0.15)' : 'transparent',
-              border: `1px solid ${isActive ? 'rgba(255,221,0,0.6)' : 'rgba(255,255,255,0.15)'}`,
+              background: isActive ? ACCENT.yellowFaint : 'transparent',
+              border: `1px solid ${isActive ? ACCENT.yellowBorder : UI.overlay}`,
               borderRadius: 4,
-              color: isActive ? '#ffdd00' : '#8899aa',
+              color: isActive ? ACCENT.yellow : UI.textMuted,
               cursor: 'pointer',
               fontFamily: 'monospace',
               fontSize: 13,

@@ -4,6 +4,7 @@ import type { FeatureCollection, Polygon } from 'geojson'
 import { useGameStore } from '../store/gameStore'
 import { hexLngLatVertices } from '../utils/hexUtils'
 import { buildVisibleHexSet } from '../utils/visibility'
+import { MAP } from '../config/theme'
 
 // Зовнішній контур зони операції (охоплює весь ігровий простір)
 const ZONE_RING: [number, number][] = [
@@ -51,7 +52,7 @@ export function FogLayer({ disabled = false }: Props) {
         id="fog-of-war"
         type="fill"
         paint={{
-          'fill-color': '#000000',
+          'fill-color': MAP.fog,
           'fill-opacity': 0.72,
         }}
       />

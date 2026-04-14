@@ -9,6 +9,7 @@ import {
   TERRAIN_LABEL, TERRAIN_COLOR,
 } from '../utils/unitStatus'
 import { getTerrain } from '../utils/terrainAnalysis'
+import { ACCENT, UI, READINESS_COLORS, MORALE_COLORS, ENTRENCH_COLORS } from '../config/theme'
 
 const COMPANY_TYPE_LABELS: Record<CompanyType, string> = {
   [CompanyType.Assault]:   'Штурмова',
@@ -27,9 +28,9 @@ const READINESS_LABEL: Record<Readiness, string> = {
 }
 
 const READINESS_COLOR: Record<Readiness, string> = {
-  [Readiness.Ready]:     '#4caf50',
-  [Readiness.Strained]:  '#ff9800',
-  [Readiness.Exhausted]: '#f44336',
+  [Readiness.Ready]:     READINESS_COLORS.ready,
+  [Readiness.Strained]:  READINESS_COLORS.strained,
+  [Readiness.Exhausted]: READINESS_COLORS.exhausted,
 }
 
 const MORALE_LABEL: Record<Morale, string> = {
@@ -40,10 +41,10 @@ const MORALE_LABEL: Record<Morale, string> = {
 }
 
 const MORALE_COLOR: Record<Morale, string> = {
-  [Morale.High]:   '#4caf50',
-  [Morale.Steady]: '#e8eaf0',
-  [Morale.Shaken]: '#ff9800',
-  [Morale.Panic]:  '#f44336',
+  [Morale.High]:   MORALE_COLORS.high,
+  [Morale.Steady]: MORALE_COLORS.steady,
+  [Morale.Shaken]: MORALE_COLORS.shaken,
+  [Morale.Panic]:  MORALE_COLORS.panic,
 }
 
 const TERRAIN_ICON: Record<TerrainType, string> = {
@@ -85,10 +86,10 @@ export function UnitPanel() {
       bottom: 24,
       left: 24,
       width: 268,
-      backgroundColor: 'rgba(10, 14, 20, 0.92)',
-      border: '1px solid rgba(0, 207, 255, 0.3)',
+      backgroundColor: UI.bg,
+      border: `1px solid ${ACCENT.blueDim}`,
       borderRadius: 6,
-      color: '#e8eaf0',
+      color: UI.text,
       fontFamily: 'monospace',
       fontSize: 13,
       overflow: 'hidden',
@@ -101,17 +102,17 @@ export function UnitPanel() {
         alignItems: 'center',
         gap: 10,
         padding: '10px 14px',
-        borderBottom: '1px solid rgba(0, 207, 255, 0.2)',
-        backgroundColor: 'rgba(0, 207, 255, 0.07)',
+        borderBottom: `1px solid ${ACCENT.blueSubtle}`,
+        backgroundColor: ACCENT.blueFaint,
       }}>
         {BRIGADE_IMAGES[company.brigadeId] && (
           <img src={BRIGADE_IMAGES[company.brigadeId]} style={{ width: 36, height: 36, objectFit: 'contain' }} />
         )}
         <div>
-          <div style={{ fontWeight: 'bold', color: '#00cfff' }}>
+          <div style={{ fontWeight: 'bold', color: ACCENT.blue }}>
             {brigade?.shortName ?? company.brigadeId}
           </div>
-          <div style={{ fontSize: 11, color: '#8899aa' }}>
+          <div style={{ fontSize: 11, color: UI.textMuted }}>
             {battalion?.name ?? company.battalionId}
           </div>
         </div>
@@ -119,7 +120,7 @@ export function UnitPanel() {
 
       {/* Іконка типу роти — на всю ширину */}
       <div style={{
-        borderBottom: '1px solid rgba(0, 207, 255, 0.2)',
+        borderBottom: `1px solid ${ACCENT.blueSubtle}`,
         backgroundColor: 'rgba(0,0,0,0.2)',
         lineHeight: 0,
       }}>
@@ -132,9 +133,9 @@ export function UnitPanel() {
       {/* Тіло */}
       <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         <div style={{ fontSize: 14, fontWeight: 'bold' }}>{company.name}</div>
-        <div style={{ color: '#8899aa', fontSize: 12 }}>{COMPANY_TYPE_LABELS[company.type]}</div>
+        <div style={{ color: UI.textMuted, fontSize: 12 }}>{COMPANY_TYPE_LABELS[company.type]}</div>
 
-        <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '2px 0' }} />
+        <div style={{ height: 1, backgroundColor: UI.divider, margin: '2px 0' }} />
 
         {/* Стан */}
         <Row label="Стан">
@@ -168,20 +169,20 @@ export function UnitPanel() {
           </div>
         )}
 
-        <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '2px 0' }} />
+        <div style={{ height: 1, backgroundColor: UI.divider, margin: '2px 0' }} />
 
         {/* Бойові параметри */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#8899aa' }}>Чисельність</span>
-            <span style={{ color: '#e8eaf0' }}>{company.strength}%</span>
+            <span style={{ color: UI.textMuted }}>Чисельність</span>
+            <span style={{ color: UI.text }}>{company.strength}%</span>
           </div>
           <div style={{ width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{
               width: `${company.strength}%`,
               height: '100%',
               borderRadius: 3,
-              backgroundColor: '#4caf50',
+              backgroundColor: READINESS_COLORS.ready,
             }} />
           </div>
         </div>
@@ -202,15 +203,15 @@ export function UnitPanel() {
         {/* Окопування — тільки для лінійної піхоти */}
         {company.type === CompanyType.Line && (
           <>
-            <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '2px 0' }} />
+            <div style={{ height: 1, backgroundColor: UI.divider, margin: '2px 0' }} />
             {company.entrenchState === EntrenchState.None && (
               <button
                 onClick={() => startEntrench(company.id)}
                 style={{
                   width: '100%', padding: '5px 0', marginTop: 2,
-                  backgroundColor: 'rgba(255,193,7,0.12)',
-                  border: '1px solid rgba(255,193,7,0.4)',
-                  borderRadius: 4, color: '#ffc107',
+                  backgroundColor: ENTRENCH_COLORS.amberBg,
+                  border: `1px solid ${ENTRENCH_COLORS.amberBorder}`,
+                  borderRadius: 4, color: ENTRENCH_COLORS.amber,
                   fontSize: 12, cursor: 'pointer',
                 }}
               >
@@ -220,15 +221,15 @@ export function UnitPanel() {
             {company.entrenchState === EntrenchState.Entrenching && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#ffc107', fontSize: 12 }}>⛏ Копає окоп...</span>
-                  <span style={{ color: '#8899aa', fontSize: 12 }}>
+                  <span style={{ color: ENTRENCH_COLORS.amber, fontSize: 12 }}>⛏ Копає окоп...</span>
+                  <span style={{ color: UI.textMuted, fontSize: 12 }}>
                     {Math.ceil(company.entrenchMinutesLeft / 60)} год
                   </span>
                 </div>
                 <div style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
                   <div style={{
                     width: `${((240 - company.entrenchMinutesLeft) / 240) * 100}%`,
-                    height: '100%', borderRadius: 2, backgroundColor: '#ffc107',
+                    height: '100%', borderRadius: 2, backgroundColor: ENTRENCH_COLORS.amber,
                   }} />
                 </div>
               </div>
@@ -238,9 +239,9 @@ export function UnitPanel() {
                 onClick={() => leaveEntrench(company.id)}
                 style={{
                   width: '100%', padding: '5px 0', marginTop: 2,
-                  backgroundColor: 'rgba(76,175,80,0.12)',
-                  border: '1px solid rgba(76,175,80,0.4)',
-                  borderRadius: 4, color: '#4caf50',
+                  backgroundColor: ENTRENCH_COLORS.leaveBg,
+                  border: `1px solid ${ENTRENCH_COLORS.leaveBorder}`,
+                  borderRadius: 4, color: READINESS_COLORS.ready,
                   fontSize: 12, cursor: 'pointer',
                 }}
               >
@@ -250,15 +251,15 @@ export function UnitPanel() {
             {company.entrenchState === EntrenchState.Leaving && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#8899aa', fontSize: 12 }}>Виходить з окопу...</span>
-                  <span style={{ color: '#8899aa', fontSize: 12 }}>
+                  <span style={{ color: UI.textMuted, fontSize: 12 }}>Виходить з окопу...</span>
+                  <span style={{ color: UI.textMuted, fontSize: 12 }}>
                     {Math.ceil(company.entrenchMinutesLeft / 60)} год
                   </span>
                 </div>
                 <div style={{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
                   <div style={{
                     width: `${((60 - company.entrenchMinutesLeft) / 60) * 100}%`,
-                    height: '100%', borderRadius: 2, backgroundColor: '#8899aa',
+                    height: '100%', borderRadius: 2, backgroundColor: UI.textMuted,
                   }} />
                 </div>
               </div>
@@ -272,14 +273,14 @@ export function UnitPanel() {
         onClick={() => selectCompany(null)}
         style={{
           padding: '8px 14px',
-          borderTop: '1px solid rgba(0, 207, 255, 0.2)',
-          color: '#8899aa',
+          borderTop: `1px solid ${ACCENT.blueSubtle}`,
+          color: UI.textMuted,
           cursor: 'pointer',
           textAlign: 'center',
           fontSize: 12,
         }}
-        onMouseEnter={e => (e.currentTarget.style.color = '#00cfff')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#8899aa')}
+        onMouseEnter={e => (e.currentTarget.style.color = ACCENT.blue)}
+        onMouseLeave={e => (e.currentTarget.style.color = UI.textMuted)}
       >
         Скасувати вибір
       </div>
@@ -290,7 +291,7 @@ export function UnitPanel() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-      <span style={{ color: '#8899aa' }}>{label}</span>
+      <span style={{ color: UI.textMuted }}>{label}</span>
       <span>{children}</span>
     </div>
   )

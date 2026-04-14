@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CompanyType, Side } from '../units/types'
 import type { Brigade } from '../units/Brigade'
+import { DEV, UI } from '../config/theme'
 
 interface Props {
   brigades: Map<string, Brigade>
@@ -45,9 +46,9 @@ export function UnitPlacer({ brigades, side, type, brigadeId, onSideChange, onTy
             style={{
               flex: 1,
               padding: '3px 6px',
-              background: side === s ? (s === Side.Ukraine ? '#1565c0' : '#b71c1c') : 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              border: `1px solid ${side === s ? (s === Side.Ukraine ? '#1565c0' : '#b71c1c') : '#555'}`,
+              background: side === s ? (s === Side.Ukraine ? DEV.ukraine : DEV.russia) : UI.black60,
+              color: UI.white,
+              border: `1px solid ${side === s ? (s === Side.Ukraine ? DEV.ukraine : DEV.russia) : UI.borderMuted}`,
               borderRadius: 4,
               fontSize: 11,
               cursor: 'pointer',
@@ -65,9 +66,9 @@ export function UnitPlacer({ brigades, side, type, brigadeId, onSideChange, onTy
         onChange={e => onBrigadeChange(e.target.value)}
         style={{
           padding: '3px 6px',
-          background: 'rgba(0,0,0,0.8)',
+          background: UI.black80,
           color: '#ccc',
-          border: '1px solid #555',
+          border: `1px solid ${UI.borderMuted}`,
           borderRadius: 4,
           fontSize: 11,
           fontFamily: 'monospace',
@@ -86,9 +87,9 @@ export function UnitPlacer({ brigades, side, type, brigadeId, onSideChange, onTy
           onClick={() => onTypeChange(t)}
           style={{
             padding: '3px 8px',
-            background: type === t ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.6)',
-            color: type === t ? '#fff' : '#aaa',
-            border: `1px solid ${type === t ? '#888' : '#444'}`,
+            background: type === t ? UI.overlay : UI.black60,
+            color: type === t ? UI.white : '#aaa',
+            border: `1px solid ${type === t ? '#888' : UI.borderSubtle}`,
             borderRadius: 4,
             fontSize: 11,
             cursor: 'pointer',

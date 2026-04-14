@@ -1,11 +1,12 @@
 import { useGameStore } from '../store/gameStore'
 import { Directive } from '../units/types'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
+import { ACCENT, UI, DIRECTIVE_COLORS } from '../config/theme'
 
 const DIRECTIVES: { value: Directive; label: string; description: string; color: string }[] = [
-  { value: Directive.Advance, label: 'Наступ',      description: '+атака, readiness витрачається швидше', color: '#e74c3c' },
-  { value: Directive.Hold,    label: 'Утримувати',  description: '+оборона, заборона руху',               color: '#3498db' },
-  { value: Directive.Rest,    label: 'Відпочинок',  description: 'Відновлення readiness і morale',         color: '#2ecc71' },
+  { value: Directive.Advance, label: 'Наступ',      description: '+атака, readiness витрачається швидше', color: DIRECTIVE_COLORS.advance },
+  { value: Directive.Hold,    label: 'Утримувати',  description: '+оборона, заборона руху',               color: DIRECTIVE_COLORS.hold },
+  { value: Directive.Rest,    label: 'Відпочинок',  description: 'Відновлення readiness і morale',         color: DIRECTIVE_COLORS.rest },
 ]
 
 export function DirectiveMenu() {
@@ -28,10 +29,10 @@ export function DirectiveMenu() {
       bottom: 24,
       right: 24,
       width: 280,
-      backgroundColor: 'rgba(10, 14, 20, 0.92)',
-      border: '1px solid rgba(255, 221, 0, 0.4)',
+      backgroundColor: UI.bg,
+      border: `1px solid ${ACCENT.yellowDim}`,
       borderRadius: 6,
-      color: '#e8eaf0',
+      color: UI.text,
       fontFamily: 'monospace',
       overflow: 'hidden',
       userSelect: 'none',
@@ -43,17 +44,17 @@ export function DirectiveMenu() {
         alignItems: 'center',
         gap: 10,
         padding: '10px 14px',
-        borderBottom: '1px solid rgba(255,221,0,0.2)',
-        backgroundColor: 'rgba(255,221,0,0.07)',
+        borderBottom: `1px solid ${ACCENT.yellowGlow}`,
+        backgroundColor: ACCENT.yellowFaint,
       }}>
         {BRIGADE_IMAGES[brigade.id] && (
           <img src={BRIGADE_IMAGES[brigade.id]} style={{ width: 36, height: 36, objectFit: 'contain' }} />
         )}
         <div>
-          <div style={{ fontWeight: 'bold', color: '#ffdd00', fontSize: 13 }}>
+          <div style={{ fontWeight: 'bold', color: ACCENT.yellow, fontSize: 13 }}>
             {brigade.shortName}
           </div>
-          <div style={{ fontSize: 11, color: '#8899aa' }}>Штаб бригади — Директива</div>
+          <div style={{ fontSize: 11, color: UI.textMuted }}>Штаб бригади — Директива</div>
         </div>
       </div>
 
@@ -70,10 +71,10 @@ export function DirectiveMenu() {
                 alignItems: 'center',
                 gap: 10,
                 padding: '8px 12px',
-                backgroundColor: isActive ? `${d.color}22` : 'rgba(255,255,255,0.04)',
+                backgroundColor: isActive ? `${d.color}22` : UI.overlayFaint,
                 border: `1px solid ${isActive ? d.color : 'rgba(255,255,255,0.1)'}`,
                 borderRadius: 4,
-                color: isActive ? d.color : '#e8eaf0',
+                color: isActive ? d.color : UI.text,
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontFamily: 'monospace',
@@ -85,7 +86,7 @@ export function DirectiveMenu() {
               }} />
               <div>
                 <div style={{ fontSize: 13, fontWeight: isActive ? 'bold' : 'normal' }}>{d.label}</div>
-                <div style={{ fontSize: 10, color: '#8899aa', marginTop: 2 }}>{d.description}</div>
+                <div style={{ fontSize: 10, color: UI.textMuted, marginTop: 2 }}>{d.description}</div>
               </div>
               {isActive && (
                 <div style={{ marginLeft: 'auto', fontSize: 10, color: d.color }}>● активна</div>
@@ -100,14 +101,14 @@ export function DirectiveMenu() {
         onClick={() => selectHQ(null)}
         style={{
           padding: '8px 14px',
-          borderTop: '1px solid rgba(255,221,0,0.15)',
-          color: '#8899aa',
+          borderTop: `1px solid ${ACCENT.yellowFaint}`,
+          color: UI.textMuted,
           cursor: 'pointer',
           textAlign: 'center',
           fontSize: 12,
         }}
-        onMouseEnter={e => (e.currentTarget.style.color = '#ffdd00')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#8899aa')}
+        onMouseEnter={e => (e.currentTarget.style.color = ACCENT.yellow)}
+        onMouseLeave={e => (e.currentTarget.style.color = UI.textMuted)}
       >
         Закрити
       </div>

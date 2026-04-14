@@ -24,6 +24,7 @@ import { Company } from './units/Company'
 import { playSound } from './utils/sound'
 import { playUnitSound } from './utils/unitSounds'
 import { BrigadeType, CompanyType, Side, TerrainType } from './units/types'
+import { MAP, TERRAIN_COLORS as THEME_TERRAIN_COLORS, DEV, UI } from './config/theme'
 import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
 
@@ -203,9 +204,9 @@ export default function App() {
   // GeoJSON terrain для dev-режиму (кольорові гекси по типу)
   const TERRAIN_COLORS: Record<TerrainType, string | null> = {
     [TerrainType.Open]:   null,
-    [TerrainType.Forest]: '#2e7d32',
-    [TerrainType.Urban]:  '#90a4ae',
-    [TerrainType.Water]:  '#1e88e5',
+    [TerrainType.Forest]: THEME_TERRAIN_COLORS.forest,
+    [TerrainType.Urban]:  THEME_TERRAIN_COLORS.urban,
+    [TerrainType.Water]:  THEME_TERRAIN_COLORS.water,
   }
   const devTerrainGeoJSON: FeatureCollection = {
     type: 'FeatureCollection',
@@ -259,7 +260,7 @@ export default function App() {
         <Layer
           id="operation-mask"
           type="fill"
-          paint={{ 'fill-color': '#000000', 'fill-opacity': 0.6 }}
+          paint={{ 'fill-color': MAP.mask, 'fill-opacity': 0.6 }}
         />
       </Source>
 
@@ -268,7 +269,7 @@ export default function App() {
           id="hex-grid"
           type="line"
           paint={{
-            'line-color': '#00cfff',
+            'line-color': MAP.hexGrid,
             'line-opacity': 0.7,
             'line-width': 1.5,
           }}
@@ -279,12 +280,12 @@ export default function App() {
         <Layer
           id="hex-highlight"
           type="fill"
-          paint={{ 'fill-color': '#ffdd00', 'fill-opacity': 0.18 }}
+          paint={{ 'fill-color': MAP.hexMoving, 'fill-opacity': 0.18 }}
         />
         <Layer
           id="hex-highlight-border"
           type="line"
-          paint={{ 'line-color': '#ffdd00', 'line-opacity': 0.7, 'line-width': 1.5 }}
+          paint={{ 'line-color': MAP.hexMoving, 'line-opacity': 0.7, 'line-width': 1.5 }}
         />
       </Source>
 
@@ -292,12 +293,12 @@ export default function App() {
         <Layer
           id="occupied-hex-fill"
           type="fill"
-          paint={{ 'fill-color': '#00ff88', 'fill-opacity': 0.18 }}
+          paint={{ 'fill-color': MAP.hexOccupied, 'fill-opacity': 0.18 }}
         />
         <Layer
           id="occupied-hex-border"
           type="line"
-          paint={{ 'line-color': '#00ff88', 'line-opacity': 0.8, 'line-width': 2 }}
+          paint={{ 'line-color': MAP.hexOccupied, 'line-opacity': 0.8, 'line-width': 2 }}
         />
       </Source>
 
@@ -305,12 +306,12 @@ export default function App() {
         <Layer
           id="moving-hex-fill"
           type="fill"
-          paint={{ 'fill-color': '#ffdd00', 'fill-opacity': 0.22 }}
+          paint={{ 'fill-color': MAP.hexMoving, 'fill-opacity': 0.22 }}
         />
         <Layer
           id="moving-hex-border"
           type="line"
-          paint={{ 'line-color': '#ffdd00', 'line-opacity': 0.95, 'line-width': 2 }}
+          paint={{ 'line-color': MAP.hexMoving, 'line-opacity': 0.95, 'line-width': 2 }}
         />
       </Source>
 
@@ -352,9 +353,9 @@ export default function App() {
         top: 12,
         right: 12,
         padding: '4px 10px',
-        background: devMode ? '#e74c3c' : 'rgba(0,0,0,0.6)',
-        color: devMode ? '#fff' : '#aaa',
-        border: `1px solid ${devMode ? '#e74c3c' : '#555'}`,
+        background: devMode ? DEV.on : UI.black60,
+        color: devMode ? UI.white : UI.textMuted,
+        border: `1px solid ${devMode ? DEV.on : UI.borderMuted}`,
         borderRadius: 4,
         fontSize: 11,
         cursor: 'pointer',
@@ -373,9 +374,9 @@ export default function App() {
           top: 44,
           right: 12,
           padding: '4px 10px',
-          background: mapEditor ? '#1565c0' : 'rgba(0,0,0,0.6)',
-          color: mapEditor ? '#fff' : '#aaa',
-          border: `1px solid ${mapEditor ? '#1565c0' : '#555'}`,
+          background: mapEditor ? DEV.mapEdit : UI.black60,
+          color: mapEditor ? UI.white : UI.textMuted,
+          border: `1px solid ${mapEditor ? DEV.mapEdit : UI.borderMuted}`,
           borderRadius: 4,
           fontSize: 11,
           cursor: 'pointer',
@@ -398,9 +399,9 @@ export default function App() {
           top: 76,
           right: 12,
           padding: '4px 10px',
-          background: unitPlacer ? '#2e7d32' : 'rgba(0,0,0,0.6)',
-          color: unitPlacer ? '#fff' : '#aaa',
-          border: `1px solid ${unitPlacer ? '#2e7d32' : '#555'}`,
+          background: unitPlacer ? DEV.unitPlace : UI.black60,
+          color: unitPlacer ? UI.white : UI.textMuted,
+          border: `1px solid ${unitPlacer ? DEV.unitPlace : UI.borderMuted}`,
           borderRadius: 4,
           fontSize: 11,
           cursor: 'pointer',
