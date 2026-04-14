@@ -6,7 +6,6 @@ import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
 import { CompanyType, Side, EntrenchState } from '../units/types'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
-import { playSound } from '../utils/sound'
 import { playUnitSound } from '../utils/unitSounds'
 import battleGun from '../sound/events/battle_gun.wav'
 import './UnitIndicators.css'
@@ -31,7 +30,6 @@ function iconSize(zoom: number): number {
 
 export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
   const companies      = useGameStore(s => s.companies)
-  const brigades       = useGameStore(s => s.brigades)
   const selectedId     = useGameStore(s => s.selectedCompanyId)
   const selectCompany  = useGameStore(s => s.selectCompany)
   const removeCompany  = useGameStore(s => s.removeCompany)

@@ -127,6 +127,7 @@ export default function App() {
     if (company?.type === CompanyType.Artillery && enemyOnHex) {
       // Артилерія + ворог на гексі → встановити ціль атаки
       setAttackTarget(selectedCompanyId, hex)
+      playUnitSound(company.type, 'attack')
     } else if (enemyOnHex && company?.type !== CompanyType.Artillery) {
       // Піхота/танк + ворог на гексі → наказ штурму
       setAssaultTarget(selectedCompanyId, enemyOnHex.id)
