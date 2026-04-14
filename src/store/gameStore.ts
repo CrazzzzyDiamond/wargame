@@ -5,6 +5,7 @@ import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
 import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness, Morale } from '../units/types'
 import { stepToward, hexDistance } from '../utils/hexUtils'
+import { planFormation } from '../ai/formationPlanner'
 import { getTerrain } from '../utils/terrainAnalysis'
 import { getZocRadius } from '../utils/unitStatus'
 import { calcDamage, ARTILLERY_MORALE_DAMAGE } from '../utils/combat'
@@ -51,6 +52,7 @@ export interface GameState {
 
   // Дії — переміщення
   moveCompany: (companyId: string, position: HexPosition) => void
+  moveBrigade: (brigadeId: string, targetHex: HexPosition) => void
 
   // Дії — окопування (тільки Line)
   startEntrench: (companyId: string) => void
@@ -109,6 +111,23 @@ export const useGameStore = create<GameState>((set) => ({
   removeCompany: (companyId) => set((state) => {
     const companies = new Map(state.companies)
     companies.delete(companyId)
+    return { companies }
+  }),
+
+  moveBrigade: (brigadeId, targetHex) => set((state) => {
+    const brigade = state.brigades.get(brigadeId)
+    if (!brigade) return {}
+
+    const companies = new Map(state.companies)
+    const targets = planFormation(brigade, companies, targetHex)
+
+    for (const { companyId, targetHex: hex } of targets) {
+      const company = companies.get(companyId)
+      if (!company) continue
+      company.targetHex = hex
+      company.movementProgress = 0
+    }
+
     return { companies }
   }),
 

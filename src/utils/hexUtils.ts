@@ -63,6 +63,29 @@ export function getHexesInRing(center: HexPosition, minRange: number, maxRange: 
   return getHexesInRadius(center, maxRange).filter(h => hexDistance(center, h) >= minRange)
 }
 
+// Один крок від ref у протилежному напрямку — повертає сусідній гекс найдальший від ref
+export function stepAwayFrom(pos: HexPosition, ref: HexPosition): HexPosition {
+  const [pq, pr] = toAxial(pos.col, pos.row)
+  const [rq, rr] = toAxial(ref.col, ref.row)
+  let bestDist = -1
+  let best: HexPosition = pos
+  for (const [dq, dr] of AXIAL_DIRS) {
+    const nq = pq + dq
+    const nr = pr + dr
+    const dist = Math.max(
+      Math.abs(nq - rq),
+      Math.abs(nr - rr),
+      Math.abs((-nq - nr) - (-rq - rr)),
+    )
+    if (dist > bestDist) {
+      bestDist = dist
+      const [col, row] = fromAxial(nq, nr)
+      best = { col, row }
+    }
+  }
+  return best
+}
+
 // Один крок з from у напрямку to — повертає сусідній гекс найближчий до цілі
 export function stepToward(from: HexPosition, to: HexPosition): HexPosition {
   if (from.col === to.col && from.row === to.row) return from

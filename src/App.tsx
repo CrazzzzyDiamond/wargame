@@ -19,6 +19,7 @@ import { INITIAL_VIEW, MAP_BOUNDS } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain, saveTerrainCache } from './utils/terrainAnalysis'
 import { BrigadePanel } from './components/BrigadePanel'
+import { BrigadeCommandPanel } from './components/BrigadeCommandPanel'
 import { TerrainEditor } from './components/TerrainEditor'
 import { UnitPlacer } from './components/UnitPlacer'
 import { Company } from './units/Company'
@@ -36,10 +37,11 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
 
 export default function App() {
-  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, setAssaultTarget, terrainMap } = useGameStore()
+  const { addBrigade, addBattalion, addCompany, selectedCompanyId, companies, brigades, moveCompany, moveBrigade, selectCompany, tick, setTerrainMap, setHexTerrain, setZoom, setAttackTarget, setAssaultTarget, terrainMap } = useGameStore()
 
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
   const [selectedBrigadeId, setSelectedBrigadeId] = useState<string | null>(null)
+  const [brigadePlanningMode, setBrigadePlanningMode] = useState(false)
   const [devMode, setDevMode] = useState(false)
   const [mapEditor, setMapEditor] = useState(false)
   const [unitPlacer, setUnitPlacer] = useState(false)
@@ -111,9 +113,15 @@ export default function App() {
       }))
       return
     }
+    if (brigadePlanningMode && selectedBrigadeId) {
+      const { col, row } = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
+      moveBrigade(selectedBrigadeId, { col, row })
+      setBrigadePlanningMode(false)
+      return
+    }
     if (selectedCompanyId) selectCompany(null)
     if (selectedBrigadeId) setSelectedBrigadeId(null)
-  }, [devMode, mapEditor, unitPlacer, editTerrain, placeSide, placeType, placeBrigadeId, selectedCompanyId, selectedBrigadeId, selectCompany, setHexTerrain, addCompany])
+  }, [devMode, mapEditor, unitPlacer, editTerrain, placeSide, placeType, placeBrigadeId, selectedCompanyId, selectedBrigadeId, brigadePlanningMode, selectCompany, setHexTerrain, addCompany, moveBrigade])
 
   // Правий клік — перемістити вибраний юніт
   const handleMapRightClick = useCallback((e: MapMouseEvent) => {
@@ -224,7 +232,7 @@ export default function App() {
     : { type: 'FeatureCollection', features: [] }
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', cursor: brigadePlanningMode ? 'crosshair' : 'default' }}>
     <Map
 
       initialViewState={INITIAL_VIEW}
@@ -401,7 +409,15 @@ export default function App() {
         onBrigadeChange={setPlaceBrigadeId}
       />
     )}
-    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={setSelectedBrigadeId} dimmed={!!selectedCompanyId} />
+    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={(id) => { setSelectedBrigadeId(id); setBrigadePlanningMode(false) }} dimmed={!!selectedCompanyId} />
+    {selectedBrigadeId && !selectedCompanyId && (
+      <BrigadeCommandPanel
+        brigadeId={selectedBrigadeId}
+        planningMode={brigadePlanningMode}
+        onOccupy={() => setBrigadePlanningMode(v => !v)}
+        onClose={() => { setSelectedBrigadeId(null); setBrigadePlanningMode(false) }}
+      />
+    )}
     <TimeControls />
     <UnitPanel />
     <DirectiveMenu />
