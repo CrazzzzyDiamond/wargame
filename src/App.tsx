@@ -133,6 +133,7 @@ export default function App() {
     } else if (enemyOnHex && company?.type !== CompanyType.Artillery) {
       // Піхота/танк + ворог на гексі → наказ штурму
       setAssaultTarget(selectedCompanyId, enemyOnHex.id)
+      playUnitSound(company!.type, 'attack')
     } else {
       // Порожній гекс → рух, скасовуємо штурм
       setAssaultTarget(selectedCompanyId, null)
