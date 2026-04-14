@@ -4,11 +4,10 @@ import { useGameStore } from '../store/gameStore'
 import { UnitIcon } from './UnitIcon'
 import { hexToLngLat } from '../utils/hexUtils'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { BrigadeType, CompanyType, Side, EntrenchState } from '../units/types'
+import { CompanyType, Side, EntrenchState } from '../units/types'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playSound } from '../utils/sound'
 import { playUnitSound } from '../utils/unitSounds'
-import airSelect from '../sound/air-select.mp3'
 import battleGun from '../sound/events/battle_gun.wav'
 import './UnitIndicators.css'
 import { SIDE_COLORS, ACCENT, UI, DEV } from '../config/theme'
@@ -151,11 +150,7 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                 if (isEnemy) return  // ворожі юніти не вибираються
                 const isAlreadySelected = selectedId === company.id
                 if (!isAlreadySelected) {
-                  const played = playUnitSound(company.type, 'select')
-                  if (!played) {
-                    const brigade = brigades.get(company.brigadeId)
-                    if (brigade?.type === BrigadeType.DSV) playSound(airSelect)
-                  }
+                  playUnitSound(company.type, 'select')
                 }
                 selectCompany(isAlreadySelected ? null : company.id)
               }}

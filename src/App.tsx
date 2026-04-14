@@ -21,11 +21,9 @@ import { loadTerrainCache, analyzeAndCacheTerrain, saveTerrainCache } from './ut
 import { TerrainEditor } from './components/TerrainEditor'
 import { UnitPlacer } from './components/UnitPlacer'
 import { Company } from './units/Company'
-import { playSound } from './utils/sound'
 import { playUnitSound } from './utils/unitSounds'
-import { BrigadeType, CompanyType, Side, TerrainType } from './units/types'
+import { CompanyType, Side, TerrainType } from './units/types'
 import { MAP, TERRAIN_COLORS as THEME_TERRAIN_COLORS, DEV, UI } from './config/theme'
-import airMove from './sound/air-move.mp3'
 import type { HexPosition } from './units/Company'
 
 // Інтервал тіку в мілісекундах реального часу
@@ -118,9 +116,8 @@ export default function App() {
   const handleMapRightClick = useCallback((e: MapMouseEvent) => {
     if (!selectedCompanyId) return
     e.preventDefault()
-    const { companies, brigades } = useGameStore.getState()
+    const { companies } = useGameStore.getState()
     const company = companies.get(selectedCompanyId)
-    const brigade = brigades.get(company?.brigadeId ?? '')
     const hex = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
 
     const enemyOnHex = Array.from(companies.values()).find(c =>
@@ -137,8 +134,7 @@ export default function App() {
     } else {
       // Порожній гекс → рух, скасовуємо штурм
       setAssaultTarget(selectedCompanyId, null)
-      const played = playUnitSound(company!.type, 'move')
-      if (!played && brigade?.type === BrigadeType.DSV) playSound(airMove)
+      playUnitSound(company!.type, 'move')
       moveCompany(selectedCompanyId, hex)
     }
   }, [selectedCompanyId, moveCompany, setAssaultTarget])

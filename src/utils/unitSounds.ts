@@ -28,6 +28,10 @@ const TANK_SELECT = Object.values(import.meta.glob('../sound/tank/select/*.mp3',
 const TANK_MOVE   = Object.values(import.meta.glob('../sound/tank/move/*.mp3',   { eager: true, import: 'default' })) as string[]
 const TANK_ATTACK = Object.values(import.meta.glob('../sound/tank/attack/*.mp3', { eager: true, import: 'default' })) as string[]
 
+const ARTILLERY_SELECT = Object.values(import.meta.glob('../sound/artillery/select/*.mp3', { eager: true, import: 'default' })) as string[]
+const ARTILLERY_MOVE   = Object.values(import.meta.glob('../sound/artillery/move/*.mp3',   { eager: true, import: 'default' })) as string[]
+const ARTILLERY_ATTACK = Object.values(import.meta.glob('../sound/artillery/attack/*.mp3', { eager: true, import: 'default' })) as string[]
+
 // Таблиця звуків по типу юніта і події
 const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
   [CompanyType.Special]: {
@@ -59,6 +63,11 @@ const SOUND_BANK: Partial<Record<CompanyType, Record<SoundEvent, string[]>>> = {
     select: TANK_SELECT,
     move:   TANK_MOVE,
     attack: TANK_ATTACK,
+  },
+  [CompanyType.Artillery]: {
+    select: ARTILLERY_SELECT,
+    move:   ARTILLERY_MOVE,
+    attack: ARTILLERY_ATTACK,
   },
 }
 
