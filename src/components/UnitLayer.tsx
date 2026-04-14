@@ -25,11 +25,12 @@ function iconSize(zoom: number): number {
   return Math.round(20 + t * 28)
 }
 
-export function UnitLayer() {
-  const companies     = useGameStore(s => s.companies)
-  const brigades      = useGameStore(s => s.brigades)
-  const selectedId    = useGameStore(s => s.selectedCompanyId)
-  const selectCompany = useGameStore(s => s.selectCompany)
+export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
+  const companies      = useGameStore(s => s.companies)
+  const brigades       = useGameStore(s => s.brigades)
+  const selectedId     = useGameStore(s => s.selectedCompanyId)
+  const selectCompany  = useGameStore(s => s.selectCompany)
+  const removeCompany  = useGameStore(s => s.removeCompany)
 
   const { current: map } = useMap()
   const [zoom, setZoom] = useState(() => map?.getZoom() ?? 9)
@@ -95,7 +96,7 @@ export function UnitLayer() {
     <>
       {Array.from(companies.values())
         .filter(c => c.isDeployed())
-        .filter(c => isEnemyVisible(c, visibleHexes, companies))
+        .filter(c => devMode || isEnemyVisible(c, visibleHexes, companies))
         .map(company => {
           const pos = animPos.current.get(company.id)
           if (!pos) return null
@@ -123,7 +124,29 @@ export function UnitLayer() {
                 selectCompany(isAlreadySelected ? null : company.id)
               }}
             >
-              <div style={{ cursor: isEnemy ? 'default' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent' }}>
+              <div style={{ cursor: isEnemy ? 'default' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', position: 'relative' }}>
+                {/* Кнопка видалення в dev-режимі */}
+                {devMode && (
+                  <div
+                    onClick={e => { e.stopPropagation(); removeCompany(company.id) }}
+                    style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      width: 14,
+                      height: 14,
+                      background: '#e74c3c',
+                      color: '#fff',
+                      borderRadius: '50%',
+                      fontSize: 10,
+                      lineHeight: '14px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      userSelect: 'none',
+                    }}
+                  >×</div>
+                )}
                 {/* Індикатори стану над юнітом */}
                 <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {company.inCombat && (

@@ -137,6 +137,14 @@ export async function analyzeAndCacheTerrain(): Promise<Map<string, TerrainType>
 
 // --- Кеш ---
 
+export function saveTerrainCache(terrain: Map<string, TerrainType>): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify([...terrain.entries()]))
+  } catch {
+    console.warn('[terrain] localStorage недоступний')
+  }
+}
+
 export function loadTerrainCache(): Map<string, TerrainType> | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)

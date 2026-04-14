@@ -37,6 +37,7 @@ export interface GameState {
   // Ландшафт гексів
   terrainMap: Map<string, TerrainType>
   setTerrainMap: (terrain: Map<string, TerrainType>) => void
+  setHexTerrain: (col: number, row: number, terrain: TerrainType) => void
 
   // Стан часу
   speed: GameSpeed
@@ -46,6 +47,7 @@ export interface GameState {
   addBrigade: (brigade: Brigade) => void
   addBattalion: (battalion: Battalion) => void
   addCompany: (company: Company) => void
+  removeCompany: (companyId: string) => void
 
   // Дії — переміщення
   moveCompany: (companyId: string, position: HexPosition) => void
@@ -101,6 +103,12 @@ export const useGameStore = create<GameState>((set) => ({
     return { companies }
   }),
 
+  removeCompany: (companyId) => set((state) => {
+    const companies = new Map(state.companies)
+    companies.delete(companyId)
+    return { companies }
+  }),
+
   moveCompany: (companyId, targetHex) => set((state) => {
     const companies = new Map(state.companies)
     const company = companies.get(companyId)
@@ -143,6 +151,12 @@ export const useGameStore = create<GameState>((set) => ({
   }),
 
   setTerrainMap: (terrain) => set({ terrainMap: terrain }),
+
+  setHexTerrain: (col, row, terrain) => set((state) => {
+    const terrainMap = new Map(state.terrainMap)
+    terrainMap.set(`${col},${row}`, terrain)
+    return { terrainMap }
+  }),
 
   selectCompany: (companyId) => set({ selectedCompanyId: companyId }),
 
