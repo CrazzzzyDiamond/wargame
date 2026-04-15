@@ -93,7 +93,12 @@ export const useGameStore = create<GameState>((set) => ({
   addBrigade: (brigade) => set((state) => {
     const brigades = new Map(state.brigades)
     brigades.set(brigade.id, brigade)
-    return { brigades }
+    // Директива по дефолту — Наступ (пізніше буде індивідуально для кожної бригади в сценарії)
+    const brigadeDirectives = new Map(state.brigadeDirectives)
+    if (!brigadeDirectives.has(brigade.id)) {
+      brigadeDirectives.set(brigade.id, Directive.Advance)
+    }
+    return { brigades, brigadeDirectives }
   }),
 
   addBattalion: (battalion) => set((state) => {

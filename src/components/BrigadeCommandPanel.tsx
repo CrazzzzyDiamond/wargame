@@ -1,9 +1,15 @@
 import { useGameStore } from '../store/gameStore'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { CompanyType, EntrenchState } from '../units/types'
-import { ACCENT, UI, STATUS_COLORS, READINESS_COLORS } from '../config/theme'
+import { CompanyType, Directive, EntrenchState } from '../units/types'
+import { ACCENT, UI, STATUS_COLORS, READINESS_COLORS, DIRECTIVE_COLORS } from '../config/theme'
 import { UnitIcon } from './UnitIcon'
 import type { Company } from '../units/Company'
+
+const DIRECTIVES: { value: Directive; label: string; color: string }[] = [
+  { value: Directive.Cautious, label: 'Обережно',       color: DIRECTIVE_COLORS.cautious },
+  { value: Directive.Advance,  label: 'Наступ',          color: DIRECTIVE_COLORS.advance  },
+  { value: Directive.AllOut,   label: 'Будь-якою ціною', color: DIRECTIVE_COLORS.allout   },
+]
 
 interface Props {
   brigadeId: string
@@ -46,8 +52,12 @@ function strengthColor(s: number): string {
 }
 
 export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose }: Props) {
-  const brigade   = useGameStore(s => s.brigades.get(brigadeId))
-  const companies = useGameStore(s => s.companies)
+  const brigade          = useGameStore(s => s.brigades.get(brigadeId))
+  const companies        = useGameStore(s => s.companies)
+  const brigadeDirectives = useGameStore(s => s.brigadeDirectives)
+  const setDirective     = useGameStore(s => s.setDirective)
+
+  const currentDirective = brigadeDirectives.get(brigadeId)
 
   if (!brigade) return null
 
@@ -121,6 +131,37 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
             </span>
           </div>
         ))}
+      </div>
+
+      <div style={{ height: 1, background: UI.border }} />
+
+      {/* Директиви */}
+      <div style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {DIRECTIVES.map(d => {
+          const isActive = currentDirective === d.value
+          return (
+            <button
+              key={d.value}
+              onClick={() => setDirective(brigadeId, d.value)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '5px 8px',
+                background: isActive ? `${d.color}22` : 'transparent',
+                border: `1px solid ${isActive ? d.color : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: 4,
+                color: isActive ? d.color : UI.textMuted,
+                cursor: 'pointer',
+                fontFamily: 'monospace',
+                fontSize: 11,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: d.color, flexShrink: 0 }} />
+              {d.label}
+              {isActive && <span style={{ marginLeft: 'auto', fontSize: 9 }}>● активна</span>}
+            </button>
+          )
+        })}
       </div>
 
       <div style={{ height: 1, background: UI.border }} />
