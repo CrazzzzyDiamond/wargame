@@ -25,7 +25,7 @@ export function UnitIcon({ type, selected = false, enemy = false, size = 52 }: P
   return (
     <img
       src={src}
-      style={{ width: 'auto', height: size, display: 'block', filter }}
+      style={{ width: 'auto', maxWidth: size * 2, height: size, display: 'block', filter }}
     />
   )
 }

@@ -135,6 +135,28 @@ export function seedScenario(store: Store) {
     },
   ])
 
+  // 14-та ОМБр — південно-східний напрямок, другий ешелон
+  addBrigadeWithUnits(store, new Brigade({
+    id: '14-ombr',
+    name: '14-та окрема механізована бригада',
+    shortName: '14 ОМБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.UrbanCombat, description: 'Досвід міських боїв', value: 1.25 },
+    hqPosition: { col: 19, row: 13 },
+  }), [
+    {
+      battalion: new Battalion({ id: '14-1bat', name: '1-й механізований батальйон', type: BattalionType.Mechanized, brigadeId: '14-ombr' }),
+      companies: [
+        new Company({ id: '14-1bat-1co', name: '1-а механізована рота', type: CompanyType.Assault,   battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 21, row: 12 } }),
+        new Company({ id: '14-1bat-2co', name: '2-а механізована рота', type: CompanyType.Line,      battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 22, row: 12 } }),
+        new Company({ id: '14-1bat-tnk', name: 'Танкова рота',          type: CompanyType.Tank,      battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 21, row: 13 } }),
+        new Company({ id: '14-1bat-rec', name: 'Розвідувальна рота',    type: CompanyType.Recon,     battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 20, row: 12 } }),
+        new Company({ id: '14-1bat-uav', name: 'Рота БПЛА',             type: CompanyType.UAV,       battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 20, row: 13 } }),
+        new Company({ id: '14-1bat-art', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '14-1bat', brigadeId: '14-ombr', position: { col: 19, row: 14 } }),
+      ],
+    },
+  ])
+
   // Юніти РФ — статична оборона
   const rfBrigade = new Brigade({
     id: 'rf-20-army',

@@ -1,6 +1,9 @@
 import { useGameStore } from '../store/gameStore'
 import { BRIGADE_IMAGES } from '../assets/brigadeImages'
-import { ACCENT, UI } from '../config/theme'
+import { CompanyType, EntrenchState } from '../units/types'
+import { ACCENT, UI, STATUS_COLORS, READINESS_COLORS } from '../config/theme'
+import { UnitIcon } from './UnitIcon'
+import type { Company } from '../units/Company'
 
 interface Props {
   brigadeId: string
@@ -9,11 +12,50 @@ interface Props {
   onClose: () => void
 }
 
+// Пріоритет для сортування у списку
+const TYPE_ORDER: Partial<Record<CompanyType, number>> = {
+  [CompanyType.Assault]:   0,
+  [CompanyType.Tank]:      1,
+  [CompanyType.Recon]:     2,
+  [CompanyType.Line]:      3,
+  [CompanyType.Special]:   4,
+  [CompanyType.UAV]:       5,
+  [CompanyType.Artillery]: 6,
+}
+
+function statusIcon(c: Company): string {
+  if (c.inCombat)    return '⚔'
+  if (c.isSuppressed) return '!'
+  if (c.entrenchState === EntrenchState.Entrenched)  return '▣'
+  if (c.entrenchState === EntrenchState.Entrenching) return '⛏'
+  if (c.targetHex)   return '▶'
+  return ''
+}
+
+function statusColor(c: Company): string {
+  if (c.inCombat)     return STATUS_COLORS.combat
+  if (c.isSuppressed) return STATUS_COLORS.marching
+  if (c.targetHex)    return STATUS_COLORS.marching
+  return UI.textMuted
+}
+
+function strengthColor(s: number): string {
+  if (s >= 60) return READINESS_COLORS.ready
+  if (s >= 30) return READINESS_COLORS.strained
+  return READINESS_COLORS.exhausted
+}
+
 export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose }: Props) {
-  const brigade = useGameStore(s => s.brigades.get(brigadeId))
+  const brigade   = useGameStore(s => s.brigades.get(brigadeId))
+  const companies = useGameStore(s => s.companies)
+
   if (!brigade) return null
 
   const img = BRIGADE_IMAGES[brigadeId]
+
+  const units = Array.from(companies.values())
+    .filter(c => c.brigadeId === brigadeId && c.isDeployed())
+    .sort((a, b) => (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9))
 
   return (
     <div style={{
@@ -21,60 +63,89 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
       top: '50%',
       left: 96,
       transform: 'translateY(-50%)',
-      width: 200,
+      width: 220,
       background: UI.bg,
       border: `1px solid ${ACCENT.blueDim}`,
       borderRadius: 8,
-      padding: '12px 14px',
       zIndex: 101,
       display: 'flex',
       flexDirection: 'column',
-      gap: 10,
+      overflow: 'hidden',
+      fontFamily: 'monospace',
     }}>
       {/* Заголовок */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderBottom: `1px solid ${UI.border}` }}>
         {img && <img src={img} style={{ height: 32, width: 'auto' }} />}
-        <span style={{
-          color: UI.text,
-          fontFamily: 'monospace',
-          fontSize: 11,
-          fontWeight: 'bold',
-          lineHeight: 1.3,
-        }}>
+        <span style={{ color: UI.text, fontSize: 11, fontWeight: 'bold', lineHeight: 1.3 }}>
           {brigade.shortName}
         </span>
         <div
           onClick={onClose}
-          style={{
-            marginLeft: 'auto',
-            color: UI.textMuted,
-            cursor: 'pointer',
-            fontSize: 14,
-            lineHeight: 1,
-          }}
+          style={{ marginLeft: 'auto', color: UI.textMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
         >×</div>
+      </div>
+
+      {/* Список рот */}
+      <div style={{ padding: '6px 0', maxHeight: 280, overflowY: 'auto' }}>
+        {units.map(c => (
+          <div key={c.id} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '4px 12px',
+          }}>
+            {/* Іконка типу */}
+            <div style={{ width: 48, height: 36, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UnitIcon type={c.type} size={36} />
+            </div>
+
+            {/* Назва + strength bar */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: UI.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {c.name}
+              </div>
+              <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 2 }}>
+                <div style={{
+                  width: `${c.strength}%`,
+                  height: '100%',
+                  background: strengthColor(c.strength),
+                  borderRadius: 2,
+                  transition: 'width 0.3s',
+                }} />
+              </div>
+            </div>
+
+            {/* Статус */}
+            <span style={{ fontSize: 10, color: statusColor(c), flexShrink: 0, width: 12, textAlign: 'center' }}>
+              {statusIcon(c)}
+            </span>
+          </div>
+        ))}
       </div>
 
       <div style={{ height: 1, background: UI.border }} />
 
       {/* Кнопка зайняти позицію */}
-      <button
-        onClick={onOccupy}
-        style={{
-          padding: '6px 10px',
-          background: planningMode ? ACCENT.yellow : 'rgba(255,221,0,0.1)',
-          color: planningMode ? '#000' : ACCENT.yellow,
-          border: `1px solid ${ACCENT.yellow}`,
-          borderRadius: 4,
-          fontSize: 11,
-          fontFamily: 'monospace',
-          cursor: 'pointer',
-          letterSpacing: '0.04em',
-          textAlign: 'left',
-        }}
-      >
-        {planningMode ? '⌖ Оберіть гекс на карті...' : '⌖ Зайняти позицію'}
-      </button>
+      <div style={{ padding: '8px 10px' }}>
+        <button
+          onClick={onOccupy}
+          style={{
+            width: '100%',
+            padding: '6px 10px',
+            background: planningMode ? ACCENT.yellow : 'rgba(255,221,0,0.1)',
+            color: planningMode ? '#000' : ACCENT.yellow,
+            border: `1px solid ${ACCENT.yellow}`,
+            borderRadius: 4,
+            fontSize: 11,
+            fontFamily: 'monospace',
+            cursor: 'pointer',
+            letterSpacing: '0.04em',
+            textAlign: 'left',
+          }}
+        >
+          {planningMode ? '⌖ Оберіть гекс на карті...' : '⌖ Зайняти позицію'}
+        </button>
+      </div>
     </div>
   )
 }
