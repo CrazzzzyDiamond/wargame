@@ -32,7 +32,7 @@ function iconSize(zoom: number): number {
   return Math.round(20 + t * 28)
 }
 
-export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
+export function UnitLayer({ devMode = false, selectedBrigadeId = null }: { devMode?: boolean; selectedBrigadeId?: string | null }) {
   const companies      = useGameStore(s => s.companies)
   const selectedId     = useGameStore(s => s.selectedCompanyId)
   const selectCompany  = useGameStore(s => s.selectCompany)
@@ -147,6 +147,7 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
 
           const isEnemy = company.side === Side.Russia
           const barColor = isEnemy ? SIDE_COLORS.russia : SIDE_COLORS.ukraine
+          const isBrigadeSelected = selectedBrigadeId === company.brigadeId
 
           return (
             <Marker
@@ -164,7 +165,15 @@ export function UnitLayer({ devMode = false }: { devMode?: boolean }) {
                 selectCompany(isAlreadySelected ? null : company.id)
               }}
             >
-              <div style={{ cursor: isEnemy ? (selectedId ? 'crosshair' : 'default') : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', position: 'relative' }}>
+              <div style={{
+                cursor: isEnemy ? (selectedId ? 'crosshair' : 'default') : 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                background: 'transparent', position: 'relative',
+                // Підсвітка бригади — ореол навколо всього маркера
+                filter: isBrigadeSelected
+                  ? 'drop-shadow(0 0 6px #ffdd00) drop-shadow(0 0 12px #ffdd0088)'
+                  : 'none',
+              }}>
                 {/* Кнопка видалення в dev-режимі */}
                 {devMode && (
                   <div

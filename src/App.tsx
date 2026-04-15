@@ -333,7 +333,7 @@ export default function App() {
       <ArtilleryRangeLayer />
       <MovementLayer />
 
-      <UnitLayer devMode={devMode} />
+      <UnitLayer devMode={devMode} selectedBrigadeId={selectedBrigadeId} />
     </Map>
     <button
       onClick={() => setDevMode(v => !v)}

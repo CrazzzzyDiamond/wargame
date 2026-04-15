@@ -92,6 +92,49 @@ export function seedScenario(store: Store) {
     },
   ])
 
+  // 25-та ОПДБр — північний фланг, прикриття
+  addBrigadeWithUnits(store, new Brigade({
+    id: '25-opdbr',
+    name: '25-та окрема повітряно-десантна бригада',
+    shortName: '25 ОПДБр',
+    type: BrigadeType.DSV,
+    bonus: { type: BonusType.AssaultSpeed, description: 'Швидке висування на позиції', value: 1.4 },
+    hqPosition: { col: 8, row: 7 },
+  }), [
+    {
+      battalion: new Battalion({ id: '25-1bat', name: '1-й десантно-штурмовий батальйон', type: BattalionType.Assault, brigadeId: '25-opdbr' }),
+      companies: [
+        new Company({ id: '25-1bat-1co', name: '1-а штурмова рота',     type: CompanyType.Assault,   battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 10, row: 6 } }),
+        new Company({ id: '25-1bat-2co', name: '2-а штурмова рота',     type: CompanyType.Assault,   battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 11, row: 6 } }),
+        new Company({ id: '25-1bat-rec', name: 'Розвідувальна рота',    type: CompanyType.Recon,     battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 10, row: 7 } }),
+        new Company({ id: '25-1bat-uav', name: 'Рота БПЛА',             type: CompanyType.UAV,       battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 9,  row: 6 } }),
+        new Company({ id: '25-1bat-tnk', name: 'Танкова рота',          type: CompanyType.Tank,      battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 9,  row: 7 } }),
+        new Company({ id: '25-1bat-art', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '25-1bat', brigadeId: '25-opdbr', position: { col: 8,  row: 8 } }),
+      ],
+    },
+  ])
+
+  // 3-тя ОТБр — танковий кулак у центрі
+  addBrigadeWithUnits(store, new Brigade({
+    id: '3-otbr',
+    name: '3-тя окрема танкова бригада',
+    shortName: '3 ОТБр',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.ArmorPenetration, description: 'Підвищена бронепробивність при прориві', value: 1.5 },
+    hqPosition: { col: 13, row: 12 },
+  }), [
+    {
+      battalion: new Battalion({ id: '3-1bat', name: '1-й танковий батальйон', type: BattalionType.Tank, brigadeId: '3-otbr' }),
+      companies: [
+        new Company({ id: '3-1bat-tnk1', name: '1-а танкова рота',      type: CompanyType.Tank,      battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 15, row: 11 } }),
+        new Company({ id: '3-1bat-tnk2', name: '2-а танкова рота',      type: CompanyType.Tank,      battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 16, row: 11 } }),
+        new Company({ id: '3-1bat-1co',  name: '1-а механізована рота', type: CompanyType.Assault,   battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 15, row: 12 } }),
+        new Company({ id: '3-1bat-rec',  name: 'Розвідувальна рота',    type: CompanyType.Recon,     battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 14, row: 11 } }),
+        new Company({ id: '3-1bat-art',  name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: '3-1bat', brigadeId: '3-otbr', position: { col: 13, row: 13 } }),
+      ],
+    },
+  ])
+
   // Юніти РФ — статична оборона
   const rfBrigade = new Brigade({
     id: 'rf-20-army',
