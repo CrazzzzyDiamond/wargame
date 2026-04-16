@@ -24,6 +24,7 @@ import { TerrainEditor } from './components/TerrainEditor'
 import { UnitPlacer } from './components/UnitPlacer'
 import { Company } from './units/Company'
 import { playUnitSound } from './utils/unitSounds'
+import { playBrigadeSelectSound, playBrigadeMoveSound } from './utils/brigadeSound'
 import { CompanyType, Side, TerrainType } from './units/types'
 import { MAP, TERRAIN_COLORS, DEV, UI } from './config/theme'
 import type { HexPosition } from './units/Company'
@@ -118,6 +119,7 @@ export default function App() {
       const { col, row } = lngLatToHex(e.lngLat.lng, e.lngLat.lat)
       moveBrigade(selectedBrigadeId, { col, row })
       setBrigadePlanningMode(false)
+      playBrigadeMoveSound()
       return
     }
     if (selectedCompanyId) selectCompany(null)
@@ -414,7 +416,12 @@ export default function App() {
         onBrigadeChange={setPlaceBrigadeId}
       />
     )}
-    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={(id) => { setSelectedBrigadeId(id); setBrigadePlanningMode(false) }} dimmed={!!selectedCompanyId} />
+    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={(id) => {
+      setSelectedBrigadeId(id)
+      setBrigadePlanningMode(false)
+      const brigade = brigades.get(id)
+      if (brigade) playBrigadeSelectSound(brigade.shortName)
+    }} dimmed={!!selectedCompanyId} />
     {selectedBrigadeId && !selectedCompanyId && (
       <BrigadeCommandPanel
         brigadeId={selectedBrigadeId}
