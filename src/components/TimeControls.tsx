@@ -67,7 +67,10 @@ export function TimeControls() {
               fontSize: 13,
               padding: '3px 10px',
               minWidth: 36,
+              transition: 'filter 0.1s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.4)' }}
+            onMouseLeave={e => { e.currentTarget.style.filter = '' }}
           >
             {btn.label}
           </button>

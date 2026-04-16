@@ -91,7 +91,9 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
         </span>
         <div
           onClick={onClose}
-          style={{ marginLeft: 'auto', color: UI.textMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
+          style={{ marginLeft: 'auto', color: UI.textMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1, transition: 'color 0.1s' }}
+          onMouseEnter={e => { e.currentTarget.style.color = UI.text }}
+          onMouseLeave={e => { e.currentTarget.style.color = UI.textMuted }}
         >×</div>
       </div>
 
@@ -154,7 +156,10 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
                 fontFamily: 'monospace',
                 fontSize: 11,
                 textAlign: 'left',
+                transition: 'filter 0.1s',
               }}
+              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.filter = '' }}
             >
               <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: d.color, flexShrink: 0 }} />
               {d.label}
@@ -182,7 +187,10 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
             cursor: 'pointer',
             letterSpacing: '0.04em',
             textAlign: 'left',
+            transition: 'filter 0.1s',
           }}
+          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.filter = '' }}
         >
           {planningMode ? '⌖ Оберіть гекс на карті...' : '⌖ Зайняти позицію'}
         </button>

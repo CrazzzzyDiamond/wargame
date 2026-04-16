@@ -212,8 +212,10 @@ export function UnitPanel() {
                   backgroundColor: ENTRENCH_COLORS.amberBg,
                   border: `1px solid ${ENTRENCH_COLORS.amberBorder}`,
                   borderRadius: 4, color: ENTRENCH_COLORS.amber,
-                  fontSize: 12, cursor: 'pointer',
+                  fontSize: 12, cursor: 'pointer', transition: 'filter 0.1s',
                 }}
+                onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.filter = '' }}
               >
                 ⛏ Окопатись
               </button>
@@ -242,8 +244,10 @@ export function UnitPanel() {
                   backgroundColor: ENTRENCH_COLORS.leaveBg,
                   border: `1px solid ${ENTRENCH_COLORS.leaveBorder}`,
                   borderRadius: 4, color: READINESS_COLORS.ready,
-                  fontSize: 12, cursor: 'pointer',
+                  fontSize: 12, cursor: 'pointer', transition: 'filter 0.1s',
                 }}
+                onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.filter = '' }}
               >
                 🪖 В окопі — покинути
               </button>

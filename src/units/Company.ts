@@ -28,6 +28,7 @@ export class Company {
   assaultTargetId: string | null       // ціль штурму (id ворожої роти)
   attackTargetHex: HexPosition | null  // призначена ціль для артилерійського вогню
   attackCooldownMinutes: number        // залишок хвилин до наступного пострілу
+  manualOrder: boolean                 // ручний наказ гравця — АІ не перебиває
 
   constructor(params: {
     id: string
@@ -59,6 +60,7 @@ export class Company {
     this.assaultTargetId = null
     this.attackTargetHex = null
     this.attackCooldownMinutes = 0
+    this.manualOrder = false
   }
 
   // Чи знаходиться рота на карті

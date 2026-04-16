@@ -6,6 +6,8 @@ import type { HexPosition } from '../units/Company'
 import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness, Morale } from '../units/types'
 import { stepToward, hexDistance } from '../utils/hexUtils'
 import { planFormation } from '../ai/formationPlanner'
+import { tickBrigade } from '../ai/brigadeController'
+import type { ZoneOfOperation } from '../ai/types'
 import { getTerrain } from '../utils/terrainAnalysis'
 import { getZocRadius } from '../utils/unitStatus'
 import { calcDamage, ARTILLERY_MORALE_DAMAGE } from '../utils/combat'
@@ -34,6 +36,10 @@ export interface GameState {
   // Вибраний штаб і директиви бригад
   selectedHQId: string | null
   brigadeDirectives: Map<string, Directive>
+
+  // Зони операцій бригад (наказ "зайняти позицію")
+  brigadeZones: Map<string, ZoneOfOperation>
+  assignZone: (brigadeId: string, zone: ZoneOfOperation | null) => void
 
   // Ландшафт гексів
   terrainMap: Map<string, TerrainType>
@@ -86,6 +92,7 @@ export const useGameStore = create<GameState>((set) => ({
   selectedCompanyId: null,
   selectedHQId: null,
   brigadeDirectives: new Map(),
+  brigadeZones: new Map(),
   terrainMap: new Map(),
   speed: 'normal',
   elapsedSeconds: 0,
@@ -119,21 +126,25 @@ export const useGameStore = create<GameState>((set) => ({
     return { companies }
   }),
 
+  assignZone: (brigadeId, zone) => set((state) => {
+    const brigadeZones = new Map(state.brigadeZones)
+    if (zone === null) {
+      brigadeZones.delete(brigadeId)
+    } else {
+      brigadeZones.set(brigadeId, zone)
+    }
+    return { brigadeZones }
+  }),
+
   moveBrigade: (brigadeId, targetHex) => set((state) => {
     const brigade = state.brigades.get(brigadeId)
     if (!brigade) return {}
 
-    const companies = new Map(state.companies)
-    const targets = planFormation(brigade, companies, targetHex)
+    // Зберігаємо зону — АІ-контролер братиме її з store кожен тік
+    const brigadeZones = new Map(state.brigadeZones)
+    brigadeZones.set(brigadeId, { targetHex })
 
-    for (const { companyId, targetHex: hex } of targets) {
-      const company = companies.get(companyId)
-      if (!company) continue
-      company.targetHex = hex
-      company.movementProgress = 0
-    }
-
-    return { companies }
+    return { brigadeZones }
   }),
 
   moveCompany: (companyId, targetHex) => set((state) => {
@@ -145,6 +156,7 @@ export const useGameStore = create<GameState>((set) => ({
         company.entrenchState === EntrenchState.Entrenching) return {}
     company.targetHex = targetHex
     company.movementProgress = 0
+    company.manualOrder = true
     return { companies }
   }),
 
@@ -174,6 +186,7 @@ export const useGameStore = create<GameState>((set) => ({
     const company = companies.get(companyId)
     if (!company || company.type === CompanyType.Artillery) return {}
     company.assaultTargetId = targetId
+    company.manualOrder = targetId !== null
     // Рухаємось до цілі штурму
     if (targetId) {
       const target = companies.get(targetId)
@@ -221,6 +234,47 @@ export const useGameStore = create<GameState>((set) => ({
 
     const companies = new Map(state.companies)
     const brigades  = state.brigades
+
+    // ---- АІ-контролер бригад ----
+    // Для кожної бригади з призначеною зоною — обчислює і застосовує тактичні дії
+    for (const [brigadeId, zone] of state.brigadeZones) {
+      const brigade   = brigades.get(brigadeId)
+      const directive = state.brigadeDirectives.get(brigadeId) ?? Directive.Advance
+      if (!brigade) continue
+
+      const actions = tickBrigade(brigade, companies, zone, directive)
+
+      for (const action of actions) {
+        const company = companies.get(action.companyId)
+        if (!company) continue
+
+        switch (action.type) {
+          case 'move':
+            if (!company.inCombat) {
+              const hexChanged = company.targetHex?.col !== action.targetHex.col
+                              || company.targetHex?.row !== action.targetHex.row
+              company.targetHex = action.targetHex
+              // Скидаємо прогрес тільки при зміні цілі — інакше рота ніколи не рушить
+              if (hexChanged) company.movementProgress = 0
+            }
+            break
+          case 'assault': {
+            const target = companies.get(action.targetId)
+            if (target?.position) {
+              company.assaultTargetId = action.targetId
+              company.targetHex = target.position
+            }
+            break
+          }
+          case 'hold':
+            if (!company.inCombat) company.targetHex = null
+            break
+          case 'attack':
+            company.attackTargetHex = action.targetHex
+            break
+        }
+      }
+    }
 
     // ---- Окопування ----
     for (const company of companies.values()) {
@@ -472,6 +526,7 @@ export const useGameStore = create<GameState>((set) => ({
         if (next.col === company.targetHex.col && next.row === company.targetHex.row) {
           company.targetHex = null
           company.movementProgress = 0
+          company.manualOrder = false  // наказ виконано — АІ може керувати знову
           break
         }
       }

@@ -49,8 +49,10 @@ export function BrigadePanel({ selectedBrigadeId, onSelect, dimmed = false }: Pr
               borderRadius: 6,
               cursor: 'pointer',
               width: 72,
-              transition: 'border-color 0.15s, background 0.15s',
+              transition: 'border-color 0.15s, background 0.15s, filter 0.15s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.filter = '' }}
           >
             {img && (
               <img
