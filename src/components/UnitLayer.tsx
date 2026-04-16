@@ -11,7 +11,7 @@ import { CompanyType, Side, EntrenchState } from '../units/types'
 import type { Company } from '../units/Company'
 import { buildVisibleHexSet, isEnemyVisible } from '../utils/visibility'
 import { playUnitSound } from '../utils/unitSounds'
-import battleGun from '../sound/events/battle_gun.wav'
+import battleGun from '../sound/events/battle_gun.mp3'
 import './UnitIndicators.css'
 import { SIDE_COLORS, ACCENT, UI, DEV } from '../config/theme'
 
