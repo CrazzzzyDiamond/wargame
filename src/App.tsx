@@ -18,6 +18,8 @@ import { seedScenario } from './units/seed'
 import { INITIAL_VIEW, MAP_BOUNDS } from './config/mapConfig'
 import { lngLatToHex, hexLngLatVertices } from './utils/hexUtils'
 import { loadTerrainCache, analyzeAndCacheTerrain, saveTerrainCache } from './utils/terrainAnalysis'
+import { LoadingScreen } from './components/LoadingScreen'
+import { usePreloader } from './utils/usePreloader'
 import { BrigadePanel } from './components/BrigadePanel'
 import { BrigadeCommandPanel } from './components/BrigadeCommandPanel'
 import { TerrainEditor } from './components/TerrainEditor'
@@ -44,6 +46,8 @@ export default function App() {
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
   const [selectedBrigadeId, setSelectedBrigadeId] = useState<string | null>(null)
   const [brigadePlanningMode, setBrigadePlanningMode] = useState(false)
+  const [mapReady, setMapReady] = useState(false)
+  const { ready: assetsReady, progress } = usePreloader()
   const [devMode, setDevMode] = useState(false)
   const [mapEditor, setMapEditor] = useState(false)
   const [unitPlacer, setUnitPlacer] = useState(false)
@@ -249,6 +253,7 @@ export default function App() {
       minZoom={7}
       maxZoom={13}
       maxBounds={MAP_BOUNDS}
+      onLoad={() => setMapReady(true)}
       onClick={handleMapClick}
       onContextMenu={handleMapRightClick}
       onZoom={e => setZoom(e.viewState.zoom)}
@@ -419,8 +424,10 @@ export default function App() {
     <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={(id) => {
       setSelectedBrigadeId(id)
       setBrigadePlanningMode(false)
-      const brigade = brigades.get(id)
-      if (brigade) playBrigadeSelectSound(brigade.shortName)
+      if (id) {
+        const brigade = brigades.get(id)
+        if (brigade) playBrigadeSelectSound(brigade.shortName)
+      }
     }} dimmed={!!selectedCompanyId} />
     {selectedBrigadeId && !selectedCompanyId && (
       <BrigadeCommandPanel
@@ -433,6 +440,7 @@ export default function App() {
     <TimeControls />
     <UnitPanel />
     <DirectiveMenu />
+    <LoadingScreen ready={mapReady && assetsReady} progress={progress} />
     </div>
   )
 }
