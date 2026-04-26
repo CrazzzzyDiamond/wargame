@@ -114,6 +114,40 @@ export function stepToward(from: HexPosition, to: HexPosition): HexPosition {
   return best
 }
 
+// Крок до цілі з обходом зайнятих гексів.
+// Повертає null якщо всі сусіди заблоковані.
+export function stepTowardAvoiding(
+  from: HexPosition,
+  to: HexPosition,
+  occupied: Set<string>,
+): HexPosition | null {
+  if (from.col === to.col && from.row === to.row) return from
+
+  const [fq, fr] = toAxial(from.col, from.row)
+  const [tq, tr] = toAxial(to.col, to.row)
+
+  let bestDist = Infinity
+  let best: HexPosition | null = null
+
+  for (const [dq, dr] of AXIAL_DIRS) {
+    const nq = fq + dq
+    const nr = fr + dr
+    const [col, row] = fromAxial(nq, nr)
+    if (occupied.has(`${col},${row}`)) continue
+    const dist = Math.max(
+      Math.abs(nq - tq),
+      Math.abs(nr - tr),
+      Math.abs((-nq - nr) - (-tq - tr)),
+    )
+    if (dist < bestDist) {
+      bestDist = dist
+      best = { col, row }
+    }
+  }
+
+  return best
+}
+
 // Вершини гексу у географічних координатах (замкнений полігон)
 export function hexLngLatVertices(col: number, row: number): [number, number][] {
   const [centerLng, centerLat] = hexToLngLat(col, row)

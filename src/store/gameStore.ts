@@ -4,11 +4,19 @@ import type { Battalion } from '../units/Battalion'
 import type { Brigade } from '../units/Brigade'
 import type { HexPosition } from '../units/Company'
 import { Directive, TerrainType, EntrenchState, CompanyType, Side, Readiness, Morale } from '../units/types'
-import { stepToward, hexDistance } from '../utils/hexUtils'
+import { stepToward, stepTowardAvoiding, hexDistance } from '../utils/hexUtils'
 import { planFormation } from '../ai/formationPlanner'
 import { tickBrigade } from '../ai/brigadeController'
 import type { ZoneOfOperation } from '../ai/types'
 import { getTerrain } from '../utils/terrainAnalysis'
+
+function isHexOccupied(companies: Map<string, Company>, hex: HexPosition, excludeId: string): boolean {
+  for (const [id, c] of companies) {
+    if (id === excludeId) continue
+    if (c.position && c.position.col === hex.col && c.position.row === hex.row) return true
+  }
+  return false
+}
 import { getZocRadius } from '../utils/unitStatus'
 import { calcDamage, ARTILLERY_MORALE_DAMAGE } from '../utils/combat'
 
@@ -151,9 +159,9 @@ export const useGameStore = create<GameState>((set) => ({
     const companies = new Map(state.companies)
     const company = companies.get(companyId)
     if (!company) return {}
-    // Заблокувати рух якщо окопана або копає
     if (company.entrenchState === EntrenchState.Entrenched ||
         company.entrenchState === EntrenchState.Entrenching) return {}
+    if (isHexOccupied(companies, targetHex, companyId)) return {}
     company.targetHex = targetHex
     company.movementProgress = 0
     company.manualOrder = true
@@ -478,6 +486,12 @@ export const useGameStore = create<GameState>((set) => ({
     for (const id of artToRemove) companies.delete(id)
 
     // ---- Рух ----
+    // Множина зайнятих гексів для обходу перешкод (будується один раз)
+    const occupiedSet = new Set<string>()
+    for (const c of companies.values()) {
+      if (c.position) occupiedSet.add(`${c.position.col},${c.position.row}`)
+    }
+
     for (const company of companies.values()) {
       // ССО і танки рухаються навіть у бою; решта — блокується
       const isMobileUnit = company.type === CompanyType.Special || company.type === CompanyType.Tank
@@ -519,14 +533,29 @@ export const useGameStore = create<GameState>((set) => ({
       company.movementProgress += hexProgress * speedMult
 
       while (company.movementProgress >= 1.0 && company.targetHex) {
+        // Прибираємо поточну позицію юніта з множини щоб не блокував сам себе
+        const curKey = `${company.position.col},${company.position.row}`
+        occupiedSet.delete(curKey)
+
+        const next = stepTowardAvoiding(company.position, company.targetHex, occupiedSet)
+
+        occupiedSet.add(curKey)
+
+        if (!next) {
+          // Всі сусіди заблоковані — чекаємо
+          company.movementProgress = 0
+          break
+        }
+
         company.movementProgress -= 1.0
-        const next = stepToward(company.position, company.targetHex)
+        occupiedSet.delete(`${next.col},${next.row}`)
+        occupiedSet.add(`${next.col},${next.row}`)
         company.position = next
 
         if (next.col === company.targetHex.col && next.row === company.targetHex.row) {
           company.targetHex = null
           company.movementProgress = 0
-          company.manualOrder = false  // наказ виконано — АІ може керувати знову
+          company.manualOrder = false
           break
         }
       }

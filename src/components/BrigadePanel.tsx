@@ -6,10 +6,10 @@ import { ACCENT, UI } from '../config/theme'
 interface Props {
   selectedBrigadeId: string | null
   onSelect: (brigadeId: string | null) => void
-  dimmed?: boolean
+  onHover: (brigadeId: string | null) => void
 }
 
-export function BrigadePanel({ selectedBrigadeId, onSelect, dimmed = false }: Props) {
+export function BrigadePanel({ selectedBrigadeId, onSelect, onHover }: Props) {
   const brigades = useGameStore(s => s.brigades)
 
   const playerBrigades = Array.from(brigades.values())
@@ -18,16 +18,12 @@ export function BrigadePanel({ selectedBrigadeId, onSelect, dimmed = false }: Pr
   return (
     <div style={{
       position: 'absolute',
-      top: '50%',
+      top: 12,
       left: 12,
-      transform: 'translateY(-50%)',
       display: 'flex',
       flexDirection: 'column',
       gap: 6,
       zIndex: 100,
-      opacity: dimmed ? 0.35 : 1,
-      transition: 'opacity 0.2s',
-      pointerEvents: dimmed ? 'none' : 'auto',
     }}>
       {playerBrigades.map(brigade => {
         const isSelected = selectedBrigadeId === brigade.id
@@ -37,7 +33,8 @@ export function BrigadePanel({ selectedBrigadeId, onSelect, dimmed = false }: Pr
           <div
             key={brigade.id}
             onClick={() => onSelect(isSelected ? null : brigade.id)}
-            title={brigade.name}
+            onMouseEnter={() => onHover(brigade.id)}
+            onMouseLeave={() => onHover(null)}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -51,15 +48,9 @@ export function BrigadePanel({ selectedBrigadeId, onSelect, dimmed = false }: Pr
               width: 72,
               transition: 'border-color 0.15s, background 0.15s, filter 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.3)' }}
-            onMouseLeave={e => { e.currentTarget.style.filter = '' }}
+            onMouseMove={e => { e.currentTarget.style.filter = 'brightness(1.3)' }}
           >
-            {img && (
-              <img
-                src={img}
-                style={{ width: 'auto', height: 36, display: 'block' }}
-              />
-            )}
+            {img && <img src={img} style={{ width: 'auto', height: 36, display: 'block' }} />}
             <span style={{
               fontSize: 9,
               color: isSelected ? ACCENT.yellow : UI.textMuted,

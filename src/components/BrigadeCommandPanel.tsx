@@ -14,6 +14,7 @@ const DIRECTIVES: { value: Directive; label: string; color: string }[] = [
 interface Props {
   brigadeId: string
   planningMode: boolean
+  isPreview?: boolean
   onOccupy: () => void
   onClose: () => void
 }
@@ -51,7 +52,7 @@ function strengthColor(s: number): string {
   return READINESS_COLORS.exhausted
 }
 
-export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose }: Props) {
+export function BrigadeCommandPanel({ brigadeId, planningMode, isPreview = false, onOccupy, onClose }: Props) {
   const brigade          = useGameStore(s => s.brigades.get(brigadeId))
   const companies        = useGameStore(s => s.companies)
   const brigadeDirectives = useGameStore(s => s.brigadeDirectives)
@@ -70,9 +71,8 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
   return (
     <div style={{
       position: 'absolute',
-      top: '50%',
+      top: 12,
       left: 96,
-      transform: 'translateY(-50%)',
       width: 220,
       background: UI.bg,
       border: `1px solid ${ACCENT.blueDim}`,
@@ -89,12 +89,14 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
         <span style={{ color: UI.text, fontSize: 11, fontWeight: 'bold', lineHeight: 1.3 }}>
           {brigade.shortName}
         </span>
-        <div
-          onClick={onClose}
-          style={{ marginLeft: 'auto', color: UI.textMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1, transition: 'color 0.1s' }}
-          onMouseEnter={e => { e.currentTarget.style.color = UI.text }}
-          onMouseLeave={e => { e.currentTarget.style.color = UI.textMuted }}
-        >×</div>
+        {!isPreview && (
+          <div
+            onClick={onClose}
+            style={{ marginLeft: 'auto', color: UI.textMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1, transition: 'color 0.1s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = UI.text }}
+            onMouseLeave={e => { e.currentTarget.style.color = UI.textMuted }}
+          >×</div>
+        )}
       </div>
 
       {/* Список рот */}
@@ -169,32 +171,34 @@ export function BrigadeCommandPanel({ brigadeId, planningMode, onOccupy, onClose
         })}
       </div>
 
-      <div style={{ height: 1, background: UI.border }} />
-
-      {/* Кнопка зайняти позицію */}
-      <div style={{ padding: '8px 10px' }}>
-        <button
-          onClick={onOccupy}
-          style={{
-            width: '100%',
-            padding: '6px 10px',
-            background: planningMode ? ACCENT.yellow : 'rgba(255,221,0,0.1)',
-            color: planningMode ? '#000' : ACCENT.yellow,
-            border: `1px solid ${ACCENT.yellow}`,
-            borderRadius: 4,
-            fontSize: 11,
-            fontFamily: 'monospace',
-            cursor: 'pointer',
-            letterSpacing: '0.04em',
-            textAlign: 'left',
-            transition: 'filter 0.1s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)' }}
-          onMouseLeave={e => { e.currentTarget.style.filter = '' }}
-        >
-          {planningMode ? '⌖ Оберіть гекс на карті...' : '⌖ Зайняти позицію'}
-        </button>
-      </div>
+      {!isPreview && (
+        <>
+          <div style={{ height: 1, background: UI.border }} />
+          <div style={{ padding: '8px 10px' }}>
+            <button
+              onClick={onOccupy}
+              style={{
+                width: '100%',
+                padding: '6px 10px',
+                background: planningMode ? ACCENT.yellow : 'rgba(255,221,0,0.1)',
+                color: planningMode ? '#000' : ACCENT.yellow,
+                border: `1px solid ${ACCENT.yellow}`,
+                borderRadius: 4,
+                fontSize: 11,
+                fontFamily: 'monospace',
+                cursor: 'pointer',
+                letterSpacing: '0.04em',
+                textAlign: 'left',
+                transition: 'filter 0.1s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)' }}
+              onMouseLeave={e => { e.currentTarget.style.filter = '' }}
+            >
+              {planningMode ? '⌖ Оберіть гекс на карті...' : '⌖ Зайняти позицію'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

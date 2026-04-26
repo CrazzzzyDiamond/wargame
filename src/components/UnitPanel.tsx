@@ -85,6 +85,7 @@ export function UnitPanel() {
       position: 'absolute',
       bottom: 24,
       left: 24,
+      zIndex: 110,
       width: 268,
       backgroundColor: UI.bg,
       border: `1px solid ${ACCENT.blueDim}`,

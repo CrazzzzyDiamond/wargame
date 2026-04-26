@@ -45,6 +45,7 @@ export default function App() {
 
   const [hoveredHex, setHoveredHex] = useState<HexPosition | null>(null)
   const [selectedBrigadeId, setSelectedBrigadeId] = useState<string | null>(null)
+  const [hoveredBrigadeId, setHoveredBrigadeId] = useState<string | null>(null)
   const [brigadePlanningMode, setBrigadePlanningMode] = useState(false)
   const [mapReady, setMapReady] = useState(false)
   const { ready: assetsReady, progress } = usePreloader()
@@ -421,18 +422,23 @@ export default function App() {
         onBrigadeChange={setPlaceBrigadeId}
       />
     )}
-    <BrigadePanel selectedBrigadeId={selectedBrigadeId} onSelect={(id) => {
-      setSelectedBrigadeId(id)
-      setBrigadePlanningMode(false)
-      if (id) {
-        const brigade = brigades.get(id)
-        if (brigade) playBrigadeSelectSound(brigade.shortName)
-      }
-    }} dimmed={!!selectedCompanyId} />
-    {selectedBrigadeId && !selectedCompanyId && (
+    <BrigadePanel
+      selectedBrigadeId={selectedBrigadeId}
+      onSelect={(id) => {
+        setSelectedBrigadeId(id)
+        setBrigadePlanningMode(false)
+        if (id) {
+          const brigade = brigades.get(id)
+          if (brigade) playBrigadeSelectSound(brigade.shortName)
+        }
+      }}
+      onHover={setHoveredBrigadeId}
+    />
+    {!selectedCompanyId && (hoveredBrigadeId || selectedBrigadeId) && (
       <BrigadeCommandPanel
-        brigadeId={selectedBrigadeId}
+        brigadeId={(selectedBrigadeId ?? hoveredBrigadeId)!}
         planningMode={brigadePlanningMode}
+        isPreview={!selectedBrigadeId}
         onOccupy={() => setBrigadePlanningMode(v => !v)}
         onClose={() => { setSelectedBrigadeId(null); setBrigadePlanningMode(false) }}
       />

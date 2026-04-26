@@ -157,24 +157,90 @@ export function seedScenario(store: Store) {
     },
   ])
 
-  // Юніти РФ — статична оборона
-  const rfBrigade = new Brigade({
-    id: 'rf-20-army',
-    name: '20-та загальновійськова армія РФ',
+  // Крaken — добровольчий розвідувальний підрозділ, північний фланг
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'kraken',
+    name: 'Крaken — спеціальний підрозділ ГУР',
+    shortName: 'Kraken',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.AssaultSpeed, description: 'Прихований рух, подвійний радіус розвідки', value: 2.0 },
+    hqPosition: { col: 16, row: 7 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'kraken-bat', name: 'Розвідувальний батальйон', type: BattalionType.Assault, brigadeId: 'kraken' }),
+      companies: [
+        new Company({ id: 'kraken-rec1', name: '1-а розвідрота', type: CompanyType.Recon, battalionId: 'kraken-bat', brigadeId: 'kraken', position: { col: 17, row: 7  } }),
+        new Company({ id: 'kraken-rec2', name: '2-а розвідрота', type: CompanyType.Recon, battalionId: 'kraken-bat', brigadeId: 'kraken', position: { col: 18, row: 7  } }),
+        new Company({ id: 'kraken-rec3', name: '3-а розвідрота', type: CompanyType.Recon, battalionId: 'kraken-bat', brigadeId: 'kraken', position: { col: 17, row: 8  } }),
+        new Company({ id: 'kraken-uav',  name: 'Рота БПЛА',      type: CompanyType.UAV,   battalionId: 'kraken-bat', brigadeId: 'kraken', position: { col: 16, row: 8  } }),
+      ],
+    },
+  ])
+
+  // ССО — спецпідрозділ глибокого проникнення, діє попереду основних сил
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'sso',
+    name: 'Сили спеціальних операцій ЗСУ',
+    shortName: 'ССО',
+    type: BrigadeType.Ground,
+    bonus: { type: BonusType.AssaultSpeed, description: 'Елітна підготовка: максимальна ефективність у засідках та штурмі', value: 2.0 },
+    hqPosition: { col: 19, row: 9 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'sso-bat', name: 'Спеціальний батальйон', type: BattalionType.Assault, brigadeId: 'sso' }),
+      companies: [
+        new Company({ id: 'sso-sp1', name: '1-а група ССО', type: CompanyType.Special, battalionId: 'sso-bat', brigadeId: 'sso', position: { col: 20, row: 8  } }),
+        new Company({ id: 'sso-sp2', name: '2-а група ССО', type: CompanyType.Special, battalionId: 'sso-bat', brigadeId: 'sso', position: { col: 21, row: 9  } }),
+        new Company({ id: 'sso-rec', name: 'Розвідрота ССО', type: CompanyType.Recon,   battalionId: 'sso-bat', brigadeId: 'sso', position: { col: 20, row: 10 } }),
+      ],
+    },
+  ])
+
+  // РФ — передова лінія розвідки та прикриття (ближня дистанція)
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'rf-screen',
+    name: '11-й армійський корпус РФ — передова',
+    shortName: 'РФ Прикриття',
+    type: BrigadeType.Ground,
+    side: Side.Russia,
+    bonus: { type: BonusType.DefenseBonus, description: 'Передова розвідка', value: 1.0 },
+    hqPosition: { col: 28, row: 11 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'rf-sc-bat', name: 'Передовий батальйон', type: BattalionType.Mechanized, brigadeId: 'rf-screen' }),
+      companies: [
+        new Company({ id: 'rf-sc-rec1', name: 'Розвідрота (пн)',   type: CompanyType.Recon, battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 27, row: 8  } }),
+        new Company({ id: 'rf-sc-rec2', name: 'Розвідрота (цнт)',  type: CompanyType.Recon, battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 28, row: 11 } }),
+        new Company({ id: 'rf-sc-rec3', name: 'Розвідрота (пд)',   type: CompanyType.Recon, battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 27, row: 14 } }),
+        new Company({ id: 'rf-sc-ln1',  name: '1-а лінійна рота',  type: CompanyType.Line,  battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 28, row: 9  } }),
+        new Company({ id: 'rf-sc-ln2',  name: '2-а лінійна рота',  type: CompanyType.Line,  battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 29, row: 12 } }),
+        new Company({ id: 'rf-sc-ln3',  name: '3-а лінійна рота',  type: CompanyType.Line,  battalionId: 'rf-sc-bat', brigadeId: 'rf-screen', side: Side.Russia, position: { col: 29, row: 10 } }),
+      ],
+    },
+  ])
+
+  // РФ — основна лінія оборони (другий ешелон)
+  addBrigadeWithUnits(store, new Brigade({
+    id: 'rf-defense',
+    name: '20-та загальновійськова армія РФ — оборона',
     shortName: '20 ЗВА РФ',
     type: BrigadeType.Ground,
     side: Side.Russia,
     bonus: { type: BonusType.DefenseBonus, description: 'Підготовлена оборона', value: 1.2 },
-    hqPosition: { col: 14, row: 11 },
-  })
-  const rfBat = new Battalion({ id: 'rf-1bat', name: '1-й батальйон', type: BattalionType.Mechanized, brigadeId: 'rf-20-army' })
-  const rfCompanies = [
-    new Company({ id: 'rf-1bat-1co', name: '1-а лінійна рота', type: CompanyType.Line, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 26, row: 8  } }),
-    new Company({ id: 'rf-1bat-2co', name: '2-а лінійна рота', type: CompanyType.Line, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 28, row: 10 } }),
-    new Company({ id: 'rf-1bat-tnk', name: 'Танкова рота',     type: CompanyType.Tank, battalionId: 'rf-1bat', brigadeId: 'rf-20-army', side: Side.Russia, position: { col: 27, row: 9  } }),
-  ]
-  rfCompanies.forEach(c => rfBat.addCompany(c.id))
-  store.addBrigade(rfBrigade)
-  store.addBattalion(rfBat)
-  rfCompanies.forEach(c => store.addCompany(c))
+    hqPosition: { col: 34, row: 11 },
+  }), [
+    {
+      battalion: new Battalion({ id: 'rf-df-bat1', name: '1-й оборонний батальйон', type: BattalionType.Mechanized, brigadeId: 'rf-defense' }),
+      companies: [
+        new Company({ id: 'rf-df-ln1',  name: '1-а лінійна рота',      type: CompanyType.Line,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 32, row: 8  } }),
+        new Company({ id: 'rf-df-ln2',  name: '2-а лінійна рота',      type: CompanyType.Line,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 33, row: 10 } }),
+        new Company({ id: 'rf-df-ln3',  name: '3-а лінійна рота',      type: CompanyType.Line,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 32, row: 12 } }),
+        new Company({ id: 'rf-df-ln4',  name: '4-а лінійна рота',      type: CompanyType.Line,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 33, row: 14 } }),
+        new Company({ id: 'rf-df-tnk1', name: '1-а танкова рота',      type: CompanyType.Tank,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 34, row: 9  } }),
+        new Company({ id: 'rf-df-tnk2', name: '2-а танкова рота',      type: CompanyType.Tank,      battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 34, row: 12 } }),
+        new Company({ id: 'rf-df-art1', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 36, row: 9  } }),
+        new Company({ id: 'rf-df-art2', name: 'Артилерійська батарея', type: CompanyType.Artillery, battalionId: 'rf-df-bat1', brigadeId: 'rf-defense', side: Side.Russia, position: { col: 36, row: 12 } }),
+      ],
+    },
+  ])
 }
